@@ -61,7 +61,7 @@ public class UIManager : MonoBehaviour
         _emotionRoutine = null;
     }
 
-    private void ShowEmotion(charEmotion emotion)
+    public void ShowEmotion(charEmotion emotion)
     {
         if (charProfile == null)
             return;

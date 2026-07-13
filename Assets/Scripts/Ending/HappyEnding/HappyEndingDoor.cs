@@ -7,19 +7,14 @@ public class HappyEndingDoor : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private SpriteRenderer doorRenderer;
-    [SerializeField] private Sprite openedDoorSprite;
-    [SerializeField] private Transform doorHandle;
+    [SerializeField] private GameObject openedDoorPrefab;
+    [SerializeField] private GameObject doorHandleObject;
     [SerializeField] private Transform zoomTarget;
-    [SerializeField] private HappyEndingCameraController cameraController;
-
     [Header("Click Interaction")]
     [SerializeField, Min(1)] private int clicksToOpen = 8;
     [SerializeField] private float minimumHandleTurn = 4f;
     [SerializeField] private float maximumHandleTurn = 28f;
-    [SerializeField] private float handleTurnDuration = 0.12f;
-    [SerializeField] private float shakeDuration = 0.08f;
-    [SerializeField] private float minimumShakeStrength = 0.025f;
-    [SerializeField] private float maximumShakeStrength = 0.1f;
+    [SerializeField] private float handleTurnDuration = 0.2f;
 
     public event Action Opened;
 
@@ -28,19 +23,17 @@ public class HappyEndingDoor : MonoBehaviour
     private bool _canInteract;
     private bool _isOpen;
     private int _clickCount;
-    private Quaternion _handleRestRotation;
+    private float _handleRestAngle;
     private Coroutine _handleRoutine;
+    private GameObject _openedDoorInstance;
 
     private void Awake()
     {
         if (doorRenderer == null)
             doorRenderer = GetComponent<SpriteRenderer>();
 
-        if (cameraController == null && Camera.main != null)
-            cameraController = Camera.main.GetComponent<HappyEndingCameraController>();
-
-        if (doorHandle != null)
-            _handleRestRotation = doorHandle.localRotation;
+        if (doorHandleObject != null)
+            _handleRestAngle = doorHandleObject.transform.localEulerAngles.z;
     }
 
     private void Update()
@@ -54,14 +47,17 @@ public class HappyEndingDoor : MonoBehaviour
         _canInteract = enabled && !_isOpen;
     }
 
+    public void HideHandle()
+    {
+        if (doorHandleObject != null)
+            doorHandleObject.SetActive(false);
+    }
+
     private void RegisterClick()
     {
         _clickCount++;
         var progress = Mathf.Clamp01((_clickCount - 1f) / Mathf.Max(1f, clicksToOpen - 1f));
         var turnAmount = Mathf.Lerp(minimumHandleTurn, maximumHandleTurn, progress);
-        var shakeStrength = Mathf.Lerp(minimumShakeStrength, maximumShakeStrength, progress);
-
-        cameraController?.Shake(shakeDuration, shakeStrength);
 
         if (_clickCount >= clicksToOpen)
         {
@@ -69,7 +65,8 @@ public class HappyEndingDoor : MonoBehaviour
             _canInteract = false;
             if (_handleRoutine != null)
                 StopCoroutine(_handleRoutine);
-            _handleRoutine = StartCoroutine(OpenDoor(turnAmount));
+            SetHandleAngle(_handleRestAngle - turnAmount);
+            OpenDoor();
             return;
         }
 
@@ -80,39 +77,46 @@ public class HappyEndingDoor : MonoBehaviour
 
     private IEnumerator TurnHandleAndReturn(float turnAmount)
     {
-        yield return RotateHandle(_handleRestRotation, GetTurnedRotation(turnAmount), handleTurnDuration * 0.5f);
-        yield return RotateHandle(GetTurnedRotation(turnAmount), _handleRestRotation, handleTurnDuration * 0.5f);
+        var turnedAngle = _handleRestAngle - turnAmount;
+        yield return RotateHandle(_handleRestAngle, turnedAngle, handleTurnDuration * 0.5f);
+        yield return RotateHandle(turnedAngle, _handleRestAngle, handleTurnDuration * 0.5f);
         _handleRoutine = null;
     }
 
-    private IEnumerator OpenDoor(float turnAmount)
+    private void OpenDoor()
     {
-        yield return RotateHandle(_handleRestRotation, GetTurnedRotation(turnAmount), handleTurnDuration);
+        if (openedDoorPrefab != null && _openedDoorInstance == null)
+        {
+            _openedDoorInstance = Instantiate(openedDoorPrefab, transform.parent);
+            _openedDoorInstance.transform.SetPositionAndRotation(transform.position, transform.rotation);
+            _openedDoorInstance.transform.localScale = transform.localScale;
+        }
 
-        if (doorRenderer != null && openedDoorSprite != null)
-            doorRenderer.sprite = openedDoorSprite;
+        if (doorRenderer != null)
+            doorRenderer.enabled = false;
 
         Opened?.Invoke();
         _handleRoutine = null;
     }
 
-    private IEnumerator RotateHandle(Quaternion from, Quaternion to, float duration)
+    private IEnumerator RotateHandle(float fromAngle, float toAngle, float duration)
     {
-        if (doorHandle == null)
+        if (doorHandleObject == null)
             yield break;
 
         duration = Mathf.Max(duration, 0.01f);
         for (var elapsed = 0f; elapsed < duration; elapsed += Time.unscaledDeltaTime)
         {
-            doorHandle.localRotation = Quaternion.Slerp(from, to, elapsed / duration);
+            SetHandleAngle(Mathf.LerpAngle(fromAngle, toAngle, elapsed / duration));
             yield return null;
         }
 
-        doorHandle.localRotation = to;
+        SetHandleAngle(toAngle);
     }
 
-    private Quaternion GetTurnedRotation(float turnAmount)
+    private void SetHandleAngle(float angle)
     {
-        return _handleRestRotation * Quaternion.Euler(0f, 0f, -turnAmount);
+        if (doorHandleObject != null)
+            doorHandleObject.transform.localEulerAngles = new Vector3(0f, 0f, angle);
     }
 }

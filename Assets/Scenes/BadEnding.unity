@@ -119,6 +119,57 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &688288119
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 688288121}
+  - component: {fileID: 688288120}
+  m_Layer: 0
+  m_Name: BadEndingPhoneChat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &688288120
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688288119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75a7b7d10b6c443f8a0b739f6963f7f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BadEndingPhoneChat
+  incomingMessages:
+  - "...\uC5EC\uBCF4\uC138\uC694?"
+  - "\uC9C0\uAE08 \uC5B4\uB514\uC57C? \uACC4\uC18D \uC5F0\uB77D\uC774 \uC548 \uB3FC."
+  - "\uBC16\uC774 \uB108\uBB34 \uC870\uC6A9\uD574. \uBB34\uC2A8 \uC77C \uC788\uB294
+    \uAC70\uC57C?"
+  - "\uC81C\uBC1C, \uC774 \uBB38\uC790 \uBCF4\uBA74 \uB2F5\uC7A5\uD574 \uC918."
+  - "\uB098 \uD63C\uC790 \uB450\uC9C0 \uB9C8."
+--- !u!4 &688288121
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688288119}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.5927, y: 3.11361, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1708994477
 GameObject:
   m_ObjectHideFlags: 0
@@ -261,3 +312,4 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1708994480}
+  - {fileID: 688288121}
