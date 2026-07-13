@@ -16,7 +16,7 @@ public class HappyEndingSceneManager : MonoBehaviour
 
     [Header("Timing")]
     [SerializeField] private float openingFadeDuration = 1.6f;
-    [SerializeField] private float doorOpenDelay = 0.75f;
+    [SerializeField] private float doorOpenDelay = 1f;
     [SerializeField] private float doorZoomDuration = 1.4f;
     [SerializeField] private float doorZoomOrthographicSize = 1.6f;
     [SerializeField] private float whiteHoldDuration = 0.8f;
@@ -49,7 +49,10 @@ public class HappyEndingSceneManager : MonoBehaviour
         if (door != null)
             door.Opened += BeginDoorOpeningSequence;
         if (dialoguePanel != null)
+        {
             dialoguePanel.DialogueCompleted += WaitForEndingClick;
+            dialoguePanel.DialogueLineShown += UpdateCharacterExpression;
+        }
     }
 
     private void Start()
@@ -62,7 +65,10 @@ public class HappyEndingSceneManager : MonoBehaviour
         if (door != null)
             door.Opened -= BeginDoorOpeningSequence;
         if (dialoguePanel != null)
+        {
             dialoguePanel.DialogueCompleted -= WaitForEndingClick;
+            dialoguePanel.DialogueLineShown -= UpdateCharacterExpression;
+        }
     }
 
     private void Update()
@@ -94,7 +100,6 @@ public class HappyEndingSceneManager : MonoBehaviour
     private IEnumerator EnterDoor()
     {
         yield return new WaitForSecondsRealtime(doorOpenDelay);
-        door?.HideHandle();
 
         Coroutine whiteFade = null;
         if (fadeManager != null)
@@ -114,9 +119,6 @@ public class HappyEndingSceneManager : MonoBehaviour
         if (characterRoot != null)
             characterRoot.SetActive(true);
 
-        if (characterImage != null && smilingCharacterSprite != null)
-            characterImage.sprite = smilingCharacterSprite;
-
         if (fadeManager != null)
             yield return fadeManager.FadeFromWhite(characterRevealDuration);
 
@@ -127,6 +129,13 @@ public class HappyEndingSceneManager : MonoBehaviour
     {
         _waitingForEndingClick = true;
         _endingReadyFrame = Time.frameCount;
+    }
+
+    // Dialogue indices are zero-based, so index 2 is the third spoken line.
+    private void UpdateCharacterExpression(int dialogueIndex)
+    {
+        if (dialogueIndex >= 2 && characterImage != null && smilingCharacterSprite != null)
+            characterImage.sprite = smilingCharacterSprite;
     }
 
     private IEnumerator FinishHappyEnding()

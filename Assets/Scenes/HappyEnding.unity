@@ -632,6 +632,7 @@ MonoBehaviour:
   minimumHandleTurn: 4
   maximumHandleTurn: 28
   handleTurnDuration: 0.12
+  openSpriteDelay: 0.4
 --- !u!212 &492230204
 SpriteRenderer:
   serializedVersion: 2
@@ -1300,7 +1301,7 @@ MonoBehaviour:
   dialoguePanel: {fileID: 168147911}
   achievementToast: {fileID: 0}
   openingFadeDuration: 0.7
-  doorOpenDelay: 0.5
+  doorOpenDelay: 1
   doorZoomDuration: 0.8
   doorZoomOrthographicSize: 1.6
   whiteHoldDuration: 0.5

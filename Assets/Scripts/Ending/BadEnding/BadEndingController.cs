@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>Plays the rescue-failure sequence in the BadEnding scene.</summary>
@@ -19,7 +20,7 @@ public sealed class BadEndingController : MonoBehaviour
     [SerializeField] private BadEndingPhoneChat phoneChat;
     [SerializeField] private UnityEvent onPlayerWakeUp;
     [SerializeField] private UnityEvent onPlayerDrinkWater;
-    [SerializeField] private float messageInterval = 1.4f;
+    [SerializeField] private float firstMessageDelay = 0.7f;
     [SerializeField] private float fadeDuration = 1.5f;
 
     private readonly string[] _lastMessages = { "계속 기다렸는데.", "이번에도 안 오는구나.", "이제 더는 못 기다리겠어." };
@@ -44,11 +45,18 @@ public sealed class BadEndingController : MonoBehaviour
         CreateFallbackPresentation();
         phoneChat.ShowPhone();
         PlayNotification(phoneNotificationClip, 880f);
-        yield return new WaitForSecondsRealtime(.7f);
-        foreach (var message in _lastMessages)
+        yield return new WaitForSecondsRealtime(firstMessageDelay);
+
+        for (int index = 0; index < _lastMessages.Length; index++)
         {
-            phoneChat.AddIncomingMessage(message);
-            yield return new WaitForSecondsRealtime(messageInterval);
+            if (index > 0)
+                PlayNotification(phoneNotificationClip, 880f);
+
+            phoneChat.AddIncomingMessage(_lastMessages[index]);
+
+            // The first text arrives on its own. Every following text waits for player input.
+            if (index < _lastMessages.Length - 1)
+                yield return WaitForNextMessageInput();
         }
 
         phoneChat.ShowDisconnected();
@@ -84,6 +92,22 @@ public sealed class BadEndingController : MonoBehaviour
     {
         GameManager.Instance?.StopAllGameplay();
         Time.timeScale = 0f;
+    }
+
+    private static IEnumerator WaitForNextMessageInput()
+    {
+        // Do not consume the click that might have opened or focused the phone UI.
+        yield return null;
+
+        while (true)
+        {
+            bool clicked = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+            bool pressedSpace = Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+            if (clicked || pressedSpace)
+                yield break;
+
+            yield return null;
+        }
     }
 
     private IEnumerator WaitForWaterDrink()
@@ -159,14 +183,14 @@ public sealed class BadEndingController : MonoBehaviour
 
         dialogueUI = Panel("DialogueUI", canvas.transform, new Color(0, 0, 0, .74f));
         Stretch(dialogueUI.GetComponent<RectTransform>(), new Vector2(.06f, .06f), new Vector2(.94f, .19f));
-        dialogueText = dialogueUI.AddComponent<TextMeshProUGUI>(); dialogueText.fontSize = 32; dialogueText.color = Color.white; dialogueText.alignment = TextAlignmentOptions.Center;
+        dialogueText = Text("DialogueText", dialogueUI.transform, string.Empty, 32, Color.white, TextAlignmentOptions.Center);
         Stretch(dialogueText.rectTransform, Vector2.zero, Vector2.one, new Vector2(22, 12), new Vector2(-22, -12)); dialogueUI.SetActive(false);
 
         resultUI = Panel("ResultUI", canvas.transform, new Color(.04f, .04f, .06f)); Stretch(resultUI.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
         var result = GameResultManager.Instance?.CurrentResult ?? new GameResultData { endingType = EndingType.Bad };
         var zone = Mathf.Max(1, result.lastMapIndex + 1);
         var record = $"구조 실패\n\n제한 시간 안에 도착하지 못했습니다.\n\n실패한 구역: 제{zone}구역\n도달 기록: {result.totalPlayTime / 60f:00}:{result.totalPlayTime % 60f:00.00}\n사망: {result.deathCount}회\n남은 시간: 0초\n\n조금만 더 빨랐다면…";
-        var resultText = resultUI.AddComponent<TextMeshProUGUI>(); resultText.text = record; resultText.fontSize = 37; resultText.color = Color.white; resultText.alignment = TextAlignmentOptions.Center;
+        var resultText = Text("ResultText", resultUI.transform, record, 37, Color.white, TextAlignmentOptions.Center);
         Stretch(resultText.rectTransform, new Vector2(.08f, .16f), new Vector2(.92f, .84f)); resultUI.SetActive(false);
         happyPhoto = new GameObject("HappyPhoto"); happyPhoto.transform.SetParent(resultUI.transform, false);
         badPhoto = Label("BadPhoto", resultUI.transform, "", 1, Color.clear, Vector2.zero, Vector2.zero); SetActive(badPhoto, false);
@@ -174,9 +198,43 @@ public sealed class BadEndingController : MonoBehaviour
         fadeCanvas = Image("Fade", canvas.transform, Color.black); Stretch(fadeCanvas.rectTransform, Vector2.zero, Vector2.one); fadeCanvas.raycastTarget = false; fadeCanvas.color = new Color(0, 0, 0, 0);
     }
 
-    private static GameObject Panel(string name, Transform parent, Color color) { var o = new GameObject(name, typeof(RectTransform), typeof(Image)); o.transform.SetParent(parent, false); o.GetComponent<Image>().color = color; return o; }
-    private static GameObject Label(string name, Transform parent, string text, float size, Color color, Vector2 min, Vector2 max) { var o = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(TextMeshProUGUI)); o.transform.SetParent(parent, false); o.GetComponent<Image>().color = new Color(color.r, color.g, color.b, .35f); var t = o.GetComponent<TextMeshProUGUI>(); t.text = text; t.fontSize = size; t.color = color; t.alignment = TextAlignmentOptions.Center; Stretch(t.rectTransform, min, max); return o; }
-    private static Image Image(string name, Transform parent, Color color) { var i = new GameObject(name, typeof(RectTransform), typeof(Image)).GetComponent<Image>(); i.transform.SetParent(parent, false); i.color = color; return i; }
+    private static GameObject Panel(string name, Transform parent, Color color)
+    {
+        var panel = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        panel.transform.SetParent(parent, false);
+        panel.GetComponent<Image>().color = color;
+        return panel;
+    }
+
+    private static GameObject Label(string name, Transform parent, string text, float size, Color color, Vector2 min, Vector2 max)
+    {
+        var label = Panel(name, parent, new Color(color.r, color.g, color.b, .35f));
+        Stretch(label.GetComponent<RectTransform>(), min, max);
+
+        var labelText = Text("Text", label.transform, text, size, color, TextAlignmentOptions.Center);
+        Stretch(labelText.rectTransform, Vector2.zero, Vector2.one);
+        return label;
+    }
+
+    private static Image Image(string name, Transform parent, Color color)
+    {
+        var image = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
+        image.transform.SetParent(parent, false);
+        image.color = color;
+        return image;
+    }
+
+    private static TMP_Text Text(string name, Transform parent, string value, float size, Color color, TextAlignmentOptions alignment)
+    {
+        var text = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+        text.transform.SetParent(parent, false);
+        text.font = TMP_Settings.defaultFontAsset;
+        text.text = value;
+        text.fontSize = size;
+        text.color = color;
+        text.alignment = alignment;
+        return text;
+    }
     private static void Stretch(RectTransform rect, Vector2 min, Vector2 max, Vector2? offsetMin = null, Vector2? offsetMax = null) { rect.anchorMin = min; rect.anchorMax = max; rect.offsetMin = offsetMin ?? Vector2.zero; rect.offsetMax = offsetMax ?? Vector2.zero; }
     private static void SetActive(GameObject target, bool active) { if (target != null) target.SetActive(active); }
     private static void Play(AudioSource source, AudioClip clip) { if (source != null && clip != null) source.PlayOneShot(clip); }

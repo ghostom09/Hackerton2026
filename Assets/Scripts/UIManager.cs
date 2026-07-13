@@ -33,6 +33,8 @@ public class UIManager : MonoBehaviour
     private Coroutine _expressionRoutine;
     private Vector3 _profileBaseScale;
 
+    public float CompleteEmotionDuration => completeEmotionDuration;
+
     void Awake()
     {
         if(Instance == null)

@@ -15,6 +15,7 @@ public class HappyEndingDoor : MonoBehaviour
     [SerializeField] private float minimumHandleTurn = 4f;
     [SerializeField] private float maximumHandleTurn = 28f;
     [SerializeField] private float handleTurnDuration = 0.2f;
+    [SerializeField] private float openSpriteDelay = 0.4f;
 
     public event Action Opened;
 
@@ -65,8 +66,7 @@ public class HappyEndingDoor : MonoBehaviour
             _canInteract = false;
             if (_handleRoutine != null)
                 StopCoroutine(_handleRoutine);
-            SetHandleAngle(_handleRestAngle - turnAmount);
-            OpenDoor();
+            _handleRoutine = StartCoroutine(OpenDoorAfterHandleTurn(turnAmount));
             return;
         }
 
@@ -83,8 +83,11 @@ public class HappyEndingDoor : MonoBehaviour
         _handleRoutine = null;
     }
 
-    private void OpenDoor()
+    private IEnumerator OpenDoorAfterHandleTurn(float turnAmount)
     {
+        SetHandleAngle(_handleRestAngle - turnAmount);
+        yield return new WaitForSecondsRealtime(openSpriteDelay);
+
         if (openedDoorPrefab != null && _openedDoorInstance == null)
         {
             _openedDoorInstance = Instantiate(openedDoorPrefab, transform.parent);
@@ -95,6 +98,7 @@ public class HappyEndingDoor : MonoBehaviour
         if (doorRenderer != null)
             doorRenderer.enabled = false;
 
+        HideHandle();
         Opened?.Invoke();
         _handleRoutine = null;
     }

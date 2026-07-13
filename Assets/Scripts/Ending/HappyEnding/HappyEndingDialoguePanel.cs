@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 public class HappyEndingDialoguePanel : MonoBehaviour
 {
     public event Action DialogueCompleted;
+    public event Action<int> DialogueLineShown;
 
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private GameObject speakerNameRoot;
@@ -127,6 +128,7 @@ public class HappyEndingDialoguePanel : MonoBehaviour
             dialogueText.text = line.message;
 
         UpdateCharacterPortraits(line.speakerName, line.portraits);
+        DialogueLineShown?.Invoke(_currentLineIndex);
     }
 
     private void UpdateCharacterPortraits(string speakerName, PortraitState[] portraits)

@@ -85,15 +85,9 @@ public class GameManager : MonoBehaviour
     {
         if (isGameEnded || _isSwitchingMap) return;
         CompleteCurrentMap();
-
-        if (currentMapIndex >= totalMapCount - 1)
-        {
-            TriggerHappyEnding();
-            return;
-        }
-
         _isSwitchingMap = true;
-        _nextMapRoutine = StartCoroutine(NextMapEndOfFrame());
+        UIManager.Instance?.CompleteMap();
+        _nextMapRoutine = StartCoroutine(NextMapAfterCompletionExpression());
     }
 
     public void MoveToNextMap() => RequestNextMap();
@@ -166,12 +160,20 @@ public class GameManager : MonoBehaviour
         if (textCore != null && !string.IsNullOrEmpty(NowMap.orderDialog)) textCore.PlayText(NowMap.orderDialog);
     }
 
-    private IEnumerator NextMapEndOfFrame()
+    private IEnumerator NextMapAfterCompletionExpression()
     {
-        yield return null;
+        float expressionDuration = UIManager.Instance != null
+            ? UIManager.Instance.CompleteEmotionDuration
+            : 0f;
+        if (expressionDuration > 0f)
+            yield return new WaitForSecondsRealtime(expressionDuration);
+
         _isSwitchingMap = false;
         _nextMapRoutine = null;
-        LoadNextMap();
+        if (currentMapIndex >= totalMapCount - 1)
+            TriggerHappyEnding();
+        else
+            LoadNextMap();
     }
 
     private void TriggerEnding(EndingType ending)

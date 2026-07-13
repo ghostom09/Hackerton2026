@@ -62,7 +62,7 @@ public sealed class BadEndingPhoneChat : MonoBehaviour
 
     private static Image Image(string name, Transform parent, Color color)
     {
-        var image = new GameObject(name, typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        var image = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
         image.transform.SetParent(parent, false);
         image.color = color;
         return image;
@@ -70,8 +70,9 @@ public sealed class BadEndingPhoneChat : MonoBehaviour
 
     private static TMP_Text Text(string name, Transform parent, string value, float size, Color color, TextAlignmentOptions alignment)
     {
-        var text = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
+        var text = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
         text.transform.SetParent(parent, false);
+        text.font = TMP_Settings.defaultFontAsset;
         text.text = value;
         text.fontSize = size;
         text.color = color;
