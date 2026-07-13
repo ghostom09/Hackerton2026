@@ -20,7 +20,7 @@ public class TextCore : MonoBehaviour
     [ContextMenu("Play Example")]
     public void PlayExample()
     {
-        PlayText("<type charDelay=0.05>Hello, <wave>world</wave>! <shake intensity=2>Shake</shake> <rainbow>Rainbow</rainbow></type>");
+        PlayText("<type charDelay=0.1>Hello, <wave>world</wave>! <shake intensity=2>Shake</shake> <rainbow>Rainbow</rainbow></type>");
     }
 
     public void PlayText(string text)

@@ -9,7 +9,6 @@ public class GameManager : MonoBehaviour
     public List<OrderSO> mapData = new();
     public OrderSO nowMap;
     public int index;
-    public int time;
     
     void Awake()
     {
@@ -26,6 +25,7 @@ public class GameManager : MonoBehaviour
 
     void ClearMap()
     {
+        UIManager.Instance.CompleteMap();
         mapData.RemoveAt(index);
     }
 
