@@ -16,7 +16,7 @@ public class GermShakeStage : MonoBehaviour
 
     [Header("Rules")]
     [SerializeField] private int germCount = 10;
-    [SerializeField] private float shakeToPop = 18f;
+    [SerializeField] private float shakeToPop = 300f;
     [SerializeField] private float shakeDecay = 14f;
     [SerializeField] private float shakeVisual = 0.18f;
     [SerializeField] private float ejectSpeed = 7f;

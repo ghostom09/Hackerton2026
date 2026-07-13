@@ -11,8 +11,7 @@ public class GasValveStage : MonoBehaviour
 
     [Header("Rules")]
     [SerializeField] private float requiredDegrees = 540f;
-    [SerializeField] private float gasMaxScale = 6f;
-    [SerializeField] private float gasMinScale = 0.4f;
+    [SerializeField] private Vector3 gasFullScale = new Vector3(14f, 8f, 1f);
     [SerializeField] private float grabRadius = 1.6f;
 
     private bool _dragging;
@@ -23,6 +22,7 @@ public class GasValveStage : MonoBehaviour
     private void Awake()
     {
         targetCamera = MiniGameVisuals.FindCamera(targetCamera);
+        UpdateGasVisual();
     }
 
     private void Update()
@@ -44,15 +44,15 @@ public class GasValveStage : MonoBehaviour
         if (_dragging && Mouse.current.leftButton.isPressed)
         {
             var delta = Mathf.DeltaAngle(_lastAngle, angle);
-            _rotated += Mathf.Abs(delta);
-            valve.Rotate(0f, 0f, delta);
+
+            // Unity's positive Z rotation is counter-clockwise.  Only the
+            // negative (clockwise) part of the mouse movement closes the valve.
+            var clockwiseDelta = Mathf.Max(0f, -delta);
+            _rotated += clockwiseDelta;
+            valve.Rotate(0f, 0f, -clockwiseDelta);
             _lastAngle = angle;
 
-            if (gas != null)
-            {
-                var t = Mathf.Clamp01(1f - _rotated / requiredDegrees);
-                gas.localScale = Vector3.one * Mathf.Lerp(gasMinScale, gasMaxScale, t);
-            }
+            UpdateGasVisual();
 
             if (_rotated >= requiredDegrees)
                 Complete();
@@ -66,8 +66,16 @@ public class GasValveStage : MonoBehaviour
     {
         _complete = true;
         _dragging = false;
-        if (gas != null)
-            gas.localScale = Vector3.one * gasMinScale * 0.5f;
+        UpdateGasVisual();
         MiniGameClear.RequestNext();
+    }
+
+    private void UpdateGasVisual()
+    {
+        if (gas == null)
+            return;
+
+        var progress = Mathf.Clamp01(_rotated / requiredDegrees);
+        gas.localScale = Vector3.Lerp(gasFullScale, Vector3.zero, progress);
     }
 }

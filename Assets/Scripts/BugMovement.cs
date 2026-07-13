@@ -9,6 +9,7 @@ public class BugMovement : MonoBehaviour
     [SerializeField] private Camera targetCamera;
 
     private Rigidbody2D _rb;
+    private Collider2D _collider;
     private Vector2 _moveDirection;
     private float _nextDirectionTime;
     private bool _wasOutside;
@@ -18,6 +19,7 @@ public class BugMovement : MonoBehaviour
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
+        _collider = GetComponent<Collider2D>();
 
         if (targetCamera == null)
             targetCamera = Camera.main;
@@ -29,7 +31,7 @@ public class BugMovement : MonoBehaviour
     {
         if (Time.time < _knockbackEndTime)
         {
-            _rb.linearVelocity = _knockbackVelocity;
+            _rb.linearVelocity = ConstrainVelocityToCamera(_knockbackVelocity);
             return;
         }
 
@@ -41,7 +43,13 @@ public class BugMovement : MonoBehaviour
             PickNewDirection();
 
         _wasOutside = isOutside;
-        _rb.linearVelocity = _moveDirection * moveSpeed;
+        var desiredVelocity = _moveDirection * moveSpeed;
+        var constrainedVelocity = ConstrainVelocityToCamera(desiredVelocity);
+
+        if ((constrainedVelocity - desiredVelocity).sqrMagnitude > 0.0001f)
+            ReverseDirection();
+
+        _rb.linearVelocity = constrainedVelocity;
     }
 
     public void ApplyKnockback(Vector2 velocity, float duration)
@@ -63,6 +71,23 @@ public class BugMovement : MonoBehaviour
     {
         _moveDirection = -_moveDirection;
         _nextDirectionTime = Time.time + Random.Range(minChangeInterval, maxChangeInterval);
+    }
+
+    private Vector2 ConstrainVelocityToCamera(Vector2 desiredVelocity)
+    {
+        if (targetCamera == null)
+            return desiredVelocity;
+
+        var extents = _collider != null ? (Vector2)_collider.bounds.extents : Vector2.zero;
+        var currentPosition = CameraBounds2D.ClampPosition(targetCamera, transform.position, extents);
+        _rb.position = currentPosition;
+
+        var nextPosition = CameraBounds2D.ClampPosition(
+            targetCamera,
+            (Vector3)currentPosition + (Vector3)(desiredVelocity * Time.fixedDeltaTime),
+            extents);
+
+        return (nextPosition - currentPosition) / Time.fixedDeltaTime;
     }
 
     private void PickNewDirection()

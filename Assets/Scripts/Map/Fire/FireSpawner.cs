@@ -18,7 +18,7 @@ public class FireSpawner : MonoBehaviour
     [Header("Spawn Area")]
     [SerializeField] private Transform[] spawnPoints;
     [SerializeField] private Vector2 areaCenter;
-    [SerializeField] private Vector2 areaSize = new Vector2(8f, 5f);
+    [SerializeField] private Vector2 areaSize = new Vector2(13.8f, 6.81f);
     [SerializeField] private float spawnZ;
 
     private readonly List<FireHealth> spawnedFires = new();

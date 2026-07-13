@@ -53,7 +53,7 @@ MonoBehaviour:
   clearBeforeSpawn: 1
   spawnPoints: []
   areaCenter: {x: 0, y: 0}
-  areaSize: {x: 8, y: 5}
+  areaSize: {x: 13.8, y: 6.81}
   spawnZ: 0
 --- !u!1 &7520158717241343552
 GameObject:

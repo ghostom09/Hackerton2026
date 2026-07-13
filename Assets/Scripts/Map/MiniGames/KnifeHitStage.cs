@@ -13,10 +13,11 @@ public class KnifeHitStage : MonoBehaviour
     [SerializeField] private Transform readyKnife;
     [SerializeField] private Transform spawnParent;
     [SerializeField] private GameObject knifePrefab;
+    [SerializeField] private TextMesh knifeCountText;
 
     [Header("Rules")]
-    [SerializeField] private int requiredKnives = 8;
-    [SerializeField] private float spinSpeed = 110f;
+    [Min(1)] [SerializeField] private int requiredKnives = 8;
+    [SerializeField] private float spinSpeed = 14f;
     [SerializeField] private float spinAccel = 4f;
     [SerializeField] private float logRadius = 1.55f;
     [SerializeField] private float knifeSpeed = 22f;
@@ -38,6 +39,9 @@ public class KnifeHitStage : MonoBehaviour
             spawnParent = transform;
         if (readyKnife != null)
             readyKnife.position = new Vector3(0f, readyY, 0f);
+
+        EnsureKnifeCountText();
+        UpdateKnifeCountText(requiredKnives);
     }
 
     private void Update()
@@ -75,6 +79,9 @@ public class KnifeHitStage : MonoBehaviour
 
     private void Fire()
     {
+        // Update on launch so the player immediately sees the number of knives left.
+        UpdateKnifeCountText(requiredKnives - _stuckAngles.Count - 1);
+
         if (readyKnife != null)
             readyKnife.gameObject.SetActive(false);
 
@@ -103,6 +110,8 @@ public class KnifeHitStage : MonoBehaviour
         StickKnife(relative);
         Destroy(_flying.gameObject);
         _flying = null;
+
+        UpdateKnifeCountText(requiredKnives - _stuckAngles.Count);
 
         if (readyKnife != null)
             readyKnife.gameObject.SetActive(true);
@@ -190,6 +199,7 @@ public class KnifeHitStage : MonoBehaviour
         _stuckKnives.Clear();
         _stuckAngles.Clear();
         _bouncing = false;
+        UpdateKnifeCountText(requiredKnives);
 
         if (readyKnife != null)
             readyKnife.gameObject.SetActive(true);
@@ -221,6 +231,34 @@ public class KnifeHitStage : MonoBehaviour
         if (knifeSr != null)
             knifeSr.color = new Color(0.85f, 0.85f, 0.9f);
         return go;
+    }
+
+    private void EnsureKnifeCountText()
+    {
+        if (knifeCountText != null)
+            return;
+
+        var counter = new GameObject("KnifeCountText");
+        counter.transform.SetParent(transform, false);
+        counter.transform.localPosition = new Vector3(0f, 3.6f, 0f);
+
+        knifeCountText = counter.AddComponent<TextMesh>();
+        knifeCountText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        knifeCountText.anchor = TextAnchor.MiddleCenter;
+        knifeCountText.alignment = TextAlignment.Center;
+        knifeCountText.characterSize = 0.42f;
+        knifeCountText.fontSize = 64;
+        knifeCountText.color = Color.white;
+
+        var meshRenderer = counter.GetComponent<MeshRenderer>();
+        if (meshRenderer != null)
+            meshRenderer.sortingOrder = 10;
+    }
+
+    private void UpdateKnifeCountText(int remainingKnives)
+    {
+        if (knifeCountText != null)
+            knifeCountText.text = Mathf.Max(0, remainingKnives).ToString();
     }
 
     private void Complete()

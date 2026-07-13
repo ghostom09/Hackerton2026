@@ -8,6 +8,11 @@ public class Plug : MonoBehaviour
 
     public int Frequency => frequency;
 
+    public void SetShape(ConnectionShape shape)
+    {
+        ConnectionShapeSprite.Apply(gameObject, shape);
+    }
+
     private void Update()
     {
         var heads = FindObjectsByType<OutletHead>(FindObjectsSortMode.None);

@@ -692,8 +692,57 @@ Transform:
   - {fileID: 6527831035983683827}
   - {fileID: 3155507377194820313}
   - {fileID: 9073706462252803220}
+  - {fileID: 743706490612842818}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &654314456303761031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 743706490612842818}
+  - component: {fileID: 311193942590277018}
+  m_Layer: 0
+  m_Name: BugSpawnManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &743706490612842818
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654314456303761031}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4138242724240529084}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &311193942590277018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654314456303761031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b6b694948c342d3a61c306c5cc7eaca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BugSpawnManager
+  targetCamera: {fileID: 0}
+  viewportPadding: 0.12
+  minimumDistance: 1.5
+  attemptsPerBug: 20
 --- !u!1 &8365312988238257171
 GameObject:
   m_ObjectHideFlags: 0
