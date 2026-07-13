@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class MapSpawn : MonoBehaviour
 {
-    // private (data) nonwMap;
+    private OrderSO nowMap;
     [SerializeField] private Vector2 mapVector;
     void Start()
     {
@@ -11,13 +11,13 @@ public class MapSpawn : MonoBehaviour
 
     void Complete()
     {
-        // Destroy(nonwMap.);
+        Destroy(nowMap.roomPrefab);
         SpawnMap();
     }
 
     void SpawnMap()
     {
-        // nowMap = GameManager.Instance.GiveData();
-        // Instantiate(nowMap. , mapVector, Quaternion.identity);
+        nowMap = GameManager.Instance.GiveData();
+        Instantiate(nowMap.roomPrefab , mapVector, Quaternion.identity);
     }
 }
