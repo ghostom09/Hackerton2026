@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
+  m_Name: Order5
+  m_EditorClassIdentifier: Assembly-CSharp::OrderSO
+  orderDialog: "<type charDelay=0.06><rumble intensity=3 speed=20><jitter intensity=2
+    speed=18><shake intensity=2.5><zoom minScale=0.92 maxScale=1.12 speed=3>\uC9C0\uC9C4\uC774\uC57C!</zoom></shake></jitter></rumble></type>"
+  roomPrefab: {fileID: 1855567258569944363, guid: ec04a3b5619063f48acf4edc9cab4c46, type: 3}
+  time: 10

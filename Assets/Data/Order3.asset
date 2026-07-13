@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
   m_Name: Order3
   m_EditorClassIdentifier: Assembly-CSharp::OrderSO
-  orderName: merge
-  roomPrefab: {fileID: 0}
-  requestDialogue: 
+  orderDialog: "<type charDelay=0.06><rainbow speed=1 saturation=0.7 spread=0.1><wave amplitude=6 frequency=6><swing angle=8 speed=3>\uCF58\uC13C\uD2B8\uB97C \uBAA8\uB450 \uC5F0\uACB0\uD558\uC138\uC694</swing></wave></rainbow></type>"
+  roomPrefab: {fileID: 8404651232704424712, guid: 9fbe4bebca70c1b438a4c831718a2af9, type: 3}
+  time: 5

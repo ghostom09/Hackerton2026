@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class MapBase : MonoBehaviour
+public abstract class MapBase : MonoBehaviour
 {
     [SerializeField] private OrderSO order;
     
