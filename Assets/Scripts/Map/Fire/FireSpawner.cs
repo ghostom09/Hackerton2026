@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -23,24 +22,15 @@ public class FireSpawner : MonoBehaviour
     [SerializeField] private float spawnZ;
 
     private readonly List<FireHealth> spawnedFires = new();
+    private int remainingLimit;
 
-    public event Action<FireHealth> FireSpawned;
-    public event Action<FireHealth> FireExtinguished;
-    public event Action AllFiresExtinguished;
-
+    public int RemainingLimit => remainingLimit;
     public int AliveFireCount => spawnedFires.Count;
 
     private void OnEnable()
     {
         if (spawnOnEnable)
-        {
             SpawnFires();
-        }
-    }
-
-    private void OnDisable()
-    {
-        UnsubscribeAll();
     }
 
     private void OnValidate()
@@ -58,166 +48,133 @@ public class FireSpawner : MonoBehaviour
     public void SpawnFires(int count)
     {
         if (clearBeforeSpawn)
-        {
             ClearSpawnedFires();
-        }
 
         count = Mathf.Max(0, count);
+        remainingLimit = count;
 
-        List<Transform> availablePoints = CreateShuffledSpawnPoints();
+        var availablePoints = CreateShuffledSpawnPoints();
 
-        for (int i = 0; i < count; i++)
-        {
-            Vector3 spawnPosition = PickSpawnPosition(availablePoints, i);
+        for (var i = 0; i < count; i++)
+            SpawnSingleFire(PickSpawnPosition(availablePoints, i));
 
-            SpawnSingleFire(spawnPosition);
-        }
-
-        if (spawnedFires.Count == 0)
-        {
-            AllFiresExtinguished?.Invoke();
-        }
+        if (remainingLimit <= 0)
+            TryClearStage();
     }
 
-    public void SpawnRandomFires()
+    public void Register(FireHealth fire)
     {
-        SpawnFires();
+        if (fire == null || spawnedFires.Contains(fire))
+            return;
+
+        spawnedFires.Add(fire);
+    }
+
+    public void NotifyFireCleared(FireHealth fire)
+    {
+        spawnedFires.Remove(fire);
+        remainingLimit = Mathf.Max(0, remainingLimit - 1);
+
+        if (remainingLimit <= 0)
+            TryClearStage();
     }
 
     public void ClearSpawnedFires()
     {
-        for (int i = spawnedFires.Count - 1; i >= 0; i--)
+        for (var i = spawnedFires.Count - 1; i >= 0; i--)
         {
-            FireHealth fire = spawnedFires[i];
+            var fire = spawnedFires[i];
             if (fire == null)
             {
                 spawnedFires.RemoveAt(i);
                 continue;
             }
 
-            fire.Extinguished -= HandleFireExtinguished;
             Destroy(fire.gameObject);
         }
 
         spawnedFires.Clear();
+        remainingLimit = 0;
+    }
+
+    private void TryClearStage()
+    {
+        if (GameManager.Instance != null)
+            GameManager.Instance.RequestNextMap();
     }
 
     private void SpawnSingleFire(Vector3 position)
     {
-        FireSize fireSize = PickFireSize();
-        FireHealth prefab = PickFirePrefab(fireSize);
+        var fireSize = PickFireSize();
+        var prefab = PickFirePrefab(fireSize);
         if (prefab == null)
         {
             Debug.LogWarning("FireSpawner has no fire prefab.", this);
             return;
         }
 
-        FireHealth fire = Instantiate(prefab, position, Quaternion.identity, transform);
+        var fire = Instantiate(prefab, position, Quaternion.identity, transform);
         if (setRandomFireSize)
-        {
             fire.SetFireSize(fireSize);
-        }
 
-        fire.Extinguished += HandleFireExtinguished;
-
-        spawnedFires.Add(fire);
-        FireSpawned?.Invoke(fire);
+        fire.BindSpawner(this);
     }
 
     private FireSize PickFireSize()
     {
-        return UnityEngine.Random.value < largeFireChance ? FireSize.Large : FireSize.Small;
+        return Random.value < largeFireChance ? FireSize.Large : FireSize.Small;
     }
 
     private FireHealth PickFirePrefab(FireSize fireSize)
     {
         if (fireSize == FireSize.Large && largeFirePrefab != null)
-        {
             return largeFirePrefab;
-        }
 
         if (fireSize == FireSize.Small && smallFirePrefab != null)
-        {
             return smallFirePrefab;
-        }
 
         return smallFirePrefab != null ? smallFirePrefab : largeFirePrefab;
     }
 
     private Vector3 PickRandomAreaPosition()
     {
-        Vector2 halfSize = areaSize * 0.5f;
-        float x = UnityEngine.Random.Range(areaCenter.x - halfSize.x, areaCenter.x + halfSize.x);
-        float y = UnityEngine.Random.Range(areaCenter.y - halfSize.y, areaCenter.y + halfSize.y);
-
+        var halfSize = areaSize * 0.5f;
+        var x = Random.Range(areaCenter.x - halfSize.x, areaCenter.x + halfSize.x);
+        var y = Random.Range(areaCenter.y - halfSize.y, areaCenter.y + halfSize.y);
         return new Vector3(x, y, spawnZ);
     }
 
     private Vector3 PickSpawnPosition(List<Transform> availablePoints, int spawnIndex)
     {
         if (availablePoints.Count == 0)
-        {
             return PickRandomAreaPosition();
-        }
 
         if (spawnIndex < availablePoints.Count)
-        {
             return availablePoints[spawnIndex].position;
-        }
 
-        return availablePoints[UnityEngine.Random.Range(0, availablePoints.Count)].position;
+        return availablePoints[Random.Range(0, availablePoints.Count)].position;
     }
 
     private List<Transform> CreateShuffledSpawnPoints()
     {
-        List<Transform> points = new();
+        var points = new List<Transform>();
 
         if (spawnPoints == null)
-        {
             return points;
-        }
 
-        for (int i = 0; i < spawnPoints.Length; i++)
+        for (var i = 0; i < spawnPoints.Length; i++)
         {
             if (spawnPoints[i] != null)
-            {
                 points.Add(spawnPoints[i]);
-            }
         }
 
-        for (int i = 0; i < points.Count; i++)
+        for (var i = 0; i < points.Count; i++)
         {
-            int randomIndex = UnityEngine.Random.Range(i, points.Count);
-            Transform temp = points[i];
-            points[i] = points[randomIndex];
-            points[randomIndex] = temp;
+            var randomIndex = Random.Range(i, points.Count);
+            (points[i], points[randomIndex]) = (points[randomIndex], points[i]);
         }
 
         return points;
-    }
-
-    private void HandleFireExtinguished(FireHealth fire)
-    {
-        fire.Extinguished -= HandleFireExtinguished;
-        spawnedFires.Remove(fire);
-
-        FireExtinguished?.Invoke(fire);
-
-        if (spawnedFires.Count == 0)
-        {
-            AllFiresExtinguished?.Invoke();
-        }
-    }
-
-    private void UnsubscribeAll()
-    {
-        for (int i = 0; i < spawnedFires.Count; i++)
-        {
-            if (spawnedFires[i] != null)
-            {
-                spawnedFires[i].Extinguished -= HandleFireExtinguished;
-            }
-        }
     }
 
     private void OnDrawGizmosSelected()
@@ -226,17 +183,13 @@ public class FireSpawner : MonoBehaviour
         Gizmos.DrawWireCube(new Vector3(areaCenter.x, areaCenter.y, spawnZ), new Vector3(areaSize.x, areaSize.y, 0f));
 
         if (spawnPoints == null)
-        {
             return;
-        }
 
         Gizmos.color = Color.red;
-        for (int i = 0; i < spawnPoints.Length; i++)
+        for (var i = 0; i < spawnPoints.Length; i++)
         {
             if (spawnPoints[i] != null)
-            {
                 Gizmos.DrawWireSphere(spawnPoints[i].position, 0.2f);
-            }
         }
     }
 }

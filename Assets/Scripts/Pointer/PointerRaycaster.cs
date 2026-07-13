@@ -11,18 +11,26 @@ public class PointerRaycaster : MonoBehaviour
 
     private void Awake()
     {
-        if (targetCamera == null)
-            targetCamera = Camera.main;
+        ResolveCamera();
     }
 
     private void Update()
     {
         var mouse = Mouse.current;
-        if (mouse == null || targetCamera == null)
+        if (mouse == null)
             return;
 
+        if (!ResolveCamera())
+        {
+            ClearPointerState();
+            return;
+        }
+
         var screenPos = mouse.position.ReadValue();
-        var worldPos = targetCamera.ScreenToWorldPoint(screenPos);
+        if (!IsValidScreenPosition(screenPos))
+            return;
+
+        var worldPos = targetCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 0f));
         var hit = Physics2D.OverlapPoint(worldPos, hitMask);
 
         UpdateHover(hit);
@@ -39,6 +47,31 @@ public class PointerRaycaster : MonoBehaviour
             DispatchUp(_pressedHit);
             _pressedHit = null;
         }
+    }
+
+    private bool ResolveCamera()
+    {
+        if (targetCamera == null)
+            targetCamera = Camera.main;
+
+        return targetCamera != null && targetCamera.isActiveAndEnabled && targetCamera.pixelWidth > 0 && targetCamera.pixelHeight > 0;
+    }
+
+    private static bool IsValidScreenPosition(Vector2 screenPos)
+    {
+        return !(float.IsNaN(screenPos.x) || float.IsNaN(screenPos.y) ||
+                 float.IsInfinity(screenPos.x) || float.IsInfinity(screenPos.y));
+    }
+
+    private void ClearPointerState()
+    {
+        if (_currentHover != null)
+        {
+            DispatchHoverExit(_currentHover);
+            _currentHover = null;
+        }
+
+        _pressedHit = null;
     }
 
     private void UpdateHover(Collider2D hit)

@@ -8,6 +8,10 @@ public class BugCounter : MonoBehaviour
 
     public void AddKill()
     {
-        count++;
+        count--;
+        if (count <= 0)
+        {
+            GameManager.Instance.RequestNextMap();
+        }
     }
 }
