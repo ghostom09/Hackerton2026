@@ -20,8 +20,9 @@ public class Timer : MonoBehaviour
 
     void Start()
     {
-        int startTime = GameManager.Instance != null ? GameManager.Instance.time : 0;
-        SetTime(startTime);
+        OrderSO orderData = GameManager.Instance != null ? GameManager.Instance.GiveData() : null;
+        // int startTime = orderData != null ? orderData.timer : 0;
+        // SetTime(startTime);
         StartTimer();
     }
 

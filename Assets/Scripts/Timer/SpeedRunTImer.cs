@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SpeedRunTImer : MonoBehaviour
+public class SpeedRunTIier : MonoBehaviour
 {
     private float elapsedTime;
     private bool isRunning;
