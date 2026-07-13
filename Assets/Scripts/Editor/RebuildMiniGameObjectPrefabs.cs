@@ -14,7 +14,7 @@ public static class RebuildMiniGameObjectPrefabs
     private const string SpawnableRoot = "Assets/Prefab/MiniGames/Spawnables";
     private const string ArtRoot = "Assets/Art/MiniGames";
     private const string SquareSpritePath = ArtRoot + "/WhiteSquare.png";
-    private const string RebuildVersionKey = "Hackerton.MiniGameRectSpriteRebuild.v8";
+    private const string RebuildVersionKey = "Hackerton.MiniGameRectSpriteRebuild.v9";
 
     private static Sprite _square;
 
@@ -28,7 +28,7 @@ public static class RebuildMiniGameObjectPrefabs
         BuildAllStages(spawnables);
         FixOrderPrefabRoots();
 
-        EditorPrefs.SetInt(RebuildVersionKey, 8);
+        EditorPrefs.SetInt(RebuildVersionKey, 9);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[RebuildMiniGameObjectPrefabs] 2D 사각형 SpriteRenderer GameObject로 재구성 완료.");
@@ -70,7 +70,7 @@ public static class RebuildMiniGameObjectPrefabs
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 return;
 
-            if (EditorPrefs.GetInt(RebuildVersionKey, 0) >= 8)
+            if (EditorPrefs.GetInt(RebuildVersionKey, 0) >= 9)
                 return;
 
             var sample = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabRoot}/Stage-GasValve.prefab");
@@ -330,6 +330,24 @@ public static class RebuildMiniGameObjectPrefabs
         return RectScaled(parent, name, pos, Vector2.one * size, color, order);
     }
 
+    private static TextMesh CounterText(Transform parent, string name, Vector2 pos)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = new Vector3(pos.x, pos.y, 0f);
+
+        var text = go.AddComponent<TextMesh>();
+        text.text = "8";
+        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.anchor = TextAnchor.MiddleCenter;
+        text.alignment = TextAlignment.Center;
+        text.characterSize = 0.42f;
+        text.fontSize = 64;
+        text.color = Color.white;
+        go.GetComponent<MeshRenderer>().sortingOrder = 10;
+        return text;
+    }
+
     private static SpriteRenderer GetSprite(GameObject go)
     {
         return go != null ? go.GetComponentInChildren<SpriteRenderer>(true) : null;
@@ -347,8 +365,8 @@ public static class RebuildMiniGameObjectPrefabs
     {
         var root = NewStageRoot("Stage-GasValve", typeof(GasValveStage));
         Rect(root.transform, "Floor", Vector2.zero, new Vector2(14f, 8f), new Color(0.18f, 0.2f, 0.22f), -2);
-        // gas is scaled at runtime
-        var gas = SquareScaled(root.transform, "GasCloud", new Vector2(0f, 0.4f), 6f, new Color(0.55f, 0.9f, 0.35f, 0.45f), 0);
+        // The gas starts by covering the full 14 x 8 stage and shrinks at runtime.
+        var gas = RectScaled(root.transform, "GasCloud", Vector2.zero, new Vector2(14f, 8f), new Color(0.55f, 0.9f, 0.35f, 0.45f), 0);
         var valve = Square(root.transform, "ValveBody", Vector2.zero, 1.4f, new Color(0.75f, 0.2f, 0.15f), 2);
         Rect(valve.transform, "ValveHandle", new Vector2(0.7f, 0f), new Vector2(0.9f, 0.22f), new Color(0.95f, 0.9f, 0.7f), 3);
         Rect(root.transform, "Pipe", new Vector2(0f, -2.2f), new Vector2(0.55f, 2.4f), new Color(0.45f, 0.48f, 0.5f), 1);
@@ -484,6 +502,8 @@ public static class RebuildMiniGameObjectPrefabs
 
         var flood = RectScaled(root.transform, "FloodFill", new Vector2(0f, -3.9f), new Vector2(12.5f, 0.15f),
             new Color(0.2f, 0.55f, 0.95f, 0.55f), 1);
+        var overflow = Rect(root.transform, "OverflowLine", new Vector2(5.75f, 0f), new Vector2(0.55f, 0.09f),
+            new Color(1f, 0.9f, 0f), 3);
         var sling = Square(root.transform, "SlingAnchor", new Vector2(0f, -2.6f), 0.55f, new Color(0.55f, 0.35f, 0.2f), 4);
         Rect(sling.transform, "ForkL", new Vector2(-0.45f, 0.35f), new Vector2(0.18f, 0.7f), new Color(0.45f, 0.3f, 0.18f), 5);
         Rect(sling.transform, "ForkR", new Vector2(0.45f, 0.35f), new Vector2(0.18f, 0.7f), new Color(0.45f, 0.3f, 0.18f), 5);
@@ -498,6 +518,7 @@ public static class RebuildMiniGameObjectPrefabs
             Bind(so, "pullMarker", pull.transform);
             Bind(so, "bandVisual", band.transform);
             Bind(so, "floodFill", flood.transform);
+            Bind(so, "overflowLine", overflow.transform);
             Bind(so, "spawnParent", spawn.transform);
             Bind(so, "patchPrefab", s.Flash);
             Bind(so, "leakPrefab", s.Leak);
@@ -644,6 +665,7 @@ public static class RebuildMiniGameObjectPrefabs
         Rect(log.transform, "Mark", new Vector2(0f, 1.1f), new Vector2(0.35f, 0.55f), new Color(0.75f, 0.5f, 0.25f), 4);
         var ready = Rect(root.transform, "ReadyKnife", new Vector2(0f, -3.2f), new Vector2(0.22f, 0.95f),
             new Color(0.85f, 0.85f, 0.9f), 5);
+        var knifeCount = CounterText(root.transform, "KnifeCountText", new Vector2(0f, 3.6f));
         var spawn = Empty(root.transform, "SpawnParent");
         SaveStage("Stage-SwingDodge", root, so =>
         {
@@ -651,6 +673,7 @@ public static class RebuildMiniGameObjectPrefabs
             Bind(so, "readyKnife", ready.transform);
             Bind(so, "spawnParent", spawn.transform);
             Bind(so, "knifePrefab", s.Bullet);
+            Bind(so, "knifeCountText", knifeCount);
         });
     }
 

@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 345262034991651154}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4, y: 0, z: 0}
+  m_LocalPosition: {x: 4.49, y: -0.33, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -158,12 +158,12 @@ MonoBehaviour:
   telegraphPrefab: {fileID: 5224473388185022346, guid: 4f05612700f61654e98915747d5fc706, type: 3}
   fallingCoverPrefab: {fileID: 8427341841051026493, guid: e75b863660eb6144d97645691ae64500, type: 3}
   telegraphDuration: 1
-  spawnInterval: 1
+  spawnInterval: 0.18
   spawnIntervalVariance: 0.25
   dropHeight: 8
   coverFallSpeed: 12
   coverRadius: 0.75
-  coverLifetimeAfterLanding: 1.25
+  coverLifetimeAfterLanding: 1
   spawnNearPlayer: 1
   spawnNearPlayerRadius: 2.75
   failOnHit: 1
@@ -231,7 +231,7 @@ Transform:
   m_GameObject: {fileID: 2608747441657863338}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4, y: 0, z: 0}
+  m_LocalPosition: {x: -5.57, y: -0.46, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

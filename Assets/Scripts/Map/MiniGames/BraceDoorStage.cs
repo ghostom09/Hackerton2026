@@ -11,13 +11,16 @@ public class BraceDoorStage : MonoBehaviour
     [Header("Rules")]
     [SerializeField] private float requiredBrace = 0.85f;
     [SerializeField] private float pressureRate = 0.18f;
-    [SerializeField] private float bracePerClick = 0.14f;
     [SerializeField] private float braceWhileHeld = 0.45f;
     [SerializeField] private float maxDoorOpen = 1.6f;
+    [SerializeField] private float doorOpenSpeed = 0.3f;
+    [SerializeField] private float doorCloseSpeed = 0.55f;
+    [SerializeField] private float catchUpCloseSpeed = 1.1f;
     [SerializeField] private float braceBarMaxWidth = 6f;
 
     private float _brace;
     private float _pressure;
+    private float _doorOpenAmount;
     private bool _complete;
     private Vector3 _doorClosedPos;
     private Vector3 _barBasePos;
@@ -41,39 +44,40 @@ public class BraceDoorStage : MonoBehaviour
 
         _pressure += pressureRate * Time.deltaTime;
 
-        if (Mouse.current != null)
-        {
-            if (Mouse.current.leftButton.wasPressedThisFrame)
-                _brace += bracePerClick;
-            if (Mouse.current.leftButton.isPressed)
-                _brace += braceWhileHeld * Time.deltaTime;
-        }
-
         var keyboard = Keyboard.current;
-        if (keyboard != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.eKey.wasPressedThisFrame))
-            _brace += bracePerClick;
+        var isBracing = (Mouse.current != null && Mouse.current.leftButton.isPressed)
+            || (keyboard != null && (keyboard.spaceKey.isPressed || keyboard.eKey.isPressed));
 
-        _brace = Mathf.Clamp01(_brace);
+        // Bracing only works while the input remains held.
+        _brace = isBracing
+            ? Mathf.MoveTowards(_brace, 1f, braceWhileHeld * Time.deltaTime)
+            : 0f;
         _pressure = Mathf.Clamp01(_pressure - _brace * 0.85f * Time.deltaTime);
 
-        var open = Mathf.Lerp(0f, maxDoorOpen, Mathf.Clamp01(_pressure - _brace * 0.35f));
+        // A full brace always targets a closed door. While the brace is building,
+        // a widely opened door catches up faster so it can still close in time.
+        var braceStrength = Mathf.Clamp01(_brace / requiredBrace);
+        var targetOpenAmount = _pressure * (1f - braceStrength);
+        var closeGap = Mathf.Max(0f, _doorOpenAmount - targetOpenAmount);
+        var moveSpeed = _doorOpenAmount < targetOpenAmount
+            ? doorOpenSpeed
+            : doorCloseSpeed + closeGap * catchUpCloseSpeed;
+        _doorOpenAmount = Mathf.MoveTowards(_doorOpenAmount, targetOpenAmount, moveSpeed * Time.deltaTime);
+
+        var open = Mathf.Lerp(0f, maxDoorOpen, _doorOpenAmount);
         door.localPosition = _doorClosedPos + new Vector3(open, 0f, 0f);
 
         if (braceBar != null)
         {
             var height = Mathf.Abs(_barBaseScale.y) > 0.001f ? _barBaseScale.y : 0.35f;
-            braceBar.localScale = new Vector3(Mathf.Max(0.05f, _brace * braceBarMaxWidth), height, 1f);
+            var gaugeRatio = Mathf.Clamp01(_brace / requiredBrace);
+            braceBar.localScale = new Vector3(Mathf.Max(0.05f, gaugeRatio * braceBarMaxWidth), height, 1f);
             braceBar.localPosition = new Vector3(_barBasePos.x + braceBar.localScale.x * 0.5f, _barBasePos.y, _barBasePos.z);
         }
 
-        if (_brace >= requiredBrace && _pressure < 0.55f)
+        if (_brace >= requiredBrace && _doorOpenAmount <= 0.02f)
             Complete();
 
-        if (_pressure > 0.98f)
-        {
-            _brace = Mathf.Max(0f, _brace - 0.2f);
-            _pressure = 0.6f;
-        }
     }
 
     private void Complete()

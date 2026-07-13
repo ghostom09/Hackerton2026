@@ -71,6 +71,9 @@ public class GameManager : MonoBehaviour
     {
         if (_currentMap != null)
         {
+            if (_currentIndex + 1 < _runtimeOrders.Count && UIManager.Instance != null)
+                UIManager.Instance.CompleteMap();
+
             Destroy(_currentMap);
             _currentMap = null;
         }

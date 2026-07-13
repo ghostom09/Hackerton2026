@@ -20,8 +20,8 @@ public class StunShootStage : MonoBehaviour
     [SerializeField] private int requiredStuns = 8;
     [SerializeField] private float fireCooldown = 0.28f;
     [SerializeField] private float bulletSpeed = 16f;
-    [SerializeField] private float enemySpeed = 2.4f;
-    [SerializeField] private float spawnInterval = 0.9f;
+    [SerializeField] private float enemySpeed = 4f;
+    [SerializeField] private float spawnInterval = 0.6f;
     [SerializeField] private float hitRadius = 0.55f;
     [SerializeField] private float dangerRadius = 0.7f;
     [SerializeField] private float arenaRadius = 5.5f;
