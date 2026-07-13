@@ -53,7 +53,6 @@ MonoBehaviour:
   braceBar: {fileID: 5657896104687832232}
   requiredBrace: 0.85
   pressureRate: 0.18
-  bracePerClick: 0.14
   braceWhileHeld: 0.45
   maxDoorOpen: 1.6
   braceBarMaxWidth: 6
