@@ -92,7 +92,7 @@ public class JewelSpawner : MonoBehaviour
         // Cheat/MagazineGrabChecker와 같은 방식으로 다음 맵을 GameManager에 요청합니다.
         if (GameManager.Instance != null)
         {
-            GameManager.Instance.RandomMap();
+            // GameManager.Instance.RandomMap();
         }
     }
 
