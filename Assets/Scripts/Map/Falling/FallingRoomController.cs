@@ -15,12 +15,12 @@ public class FallingRoomController : MonoBehaviour
     [SerializeField] private GameObject telegraphPrefab;
     [SerializeField] private GameObject fallingCoverPrefab;
     [SerializeField] private float telegraphDuration = 1f;
-    [SerializeField] private float spawnInterval = 1.25f;
+    [SerializeField] private float spawnInterval = 0.75f;
     [SerializeField] private float spawnIntervalVariance = 0.25f;
     [SerializeField] private float dropHeight = 8f;
     [SerializeField] private float coverFallSpeed = 12f;
     [SerializeField] private float coverRadius = 0.75f;
-    [SerializeField] private float coverLifetimeAfterLanding = 1.25f;
+    [SerializeField] private float coverLifetimeAfterLanding = 1f;
     [SerializeField] private bool spawnNearPlayer = true;
     [SerializeField] private float spawnNearPlayerRadius = 2.75f;
 
