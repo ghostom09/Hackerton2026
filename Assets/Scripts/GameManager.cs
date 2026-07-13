@@ -1,15 +1,51 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     
-    void Start()
+    // public List<> mapData = new();
+    // public -- nowMap;
+    public int index;
+    
+    void Awake()
     {
         if(Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(this);
         }
+        else Destroy(this);
     }
+
+    void Start()
+    {
+        RandomMap();
+    }
+
+    public void ClearMap()
+    {
+        // mapData.RemoveAt(index);
+    }
+
+    void RandomMap()
+    {
+        // if (nowMap)
+        // {
+        //     ClearMap();
+        // }
         
+        // int num = mapData.Count;
+        
+        // index = UnityEngine.Random.Range(0, num);
+        
+        // nowMap = mapData[index];
+    }
+
+    // public (data) GiveData()
+    // {
+    //     return nowMap;
+    // }
 }
