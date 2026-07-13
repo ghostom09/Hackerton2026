@@ -14,7 +14,7 @@ public static class RebuildMiniGameObjectPrefabs
     private const string SpawnableRoot = "Assets/Prefab/MiniGames/Spawnables";
     private const string ArtRoot = "Assets/Art/MiniGames";
     private const string SquareSpritePath = ArtRoot + "/WhiteSquare.png";
-    private const string RebuildVersionKey = "Hackerton.MiniGameRectSpriteRebuild.v7";
+    private const string RebuildVersionKey = "Hackerton.MiniGameRectSpriteRebuild.v8";
 
     private static Sprite _square;
 
@@ -28,7 +28,7 @@ public static class RebuildMiniGameObjectPrefabs
         BuildAllStages(spawnables);
         FixOrderPrefabRoots();
 
-        EditorPrefs.SetInt(RebuildVersionKey, 7);
+        EditorPrefs.SetInt(RebuildVersionKey, 8);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[RebuildMiniGameObjectPrefabs] 2D 사각형 SpriteRenderer GameObject로 재구성 완료.");
@@ -70,7 +70,7 @@ public static class RebuildMiniGameObjectPrefabs
             if (EditorApplication.isPlayingOrWillChangePlaymode)
                 return;
 
-            if (EditorPrefs.GetInt(RebuildVersionKey, 0) >= 7)
+            if (EditorPrefs.GetInt(RebuildVersionKey, 0) >= 8)
                 return;
 
             var sample = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabRoot}/Stage-GasValve.prefab");
@@ -705,13 +705,22 @@ public static class RebuildMiniGameObjectPrefabs
 
     private static void BuildKit(Spawnables s)
     {
-        var root = NewStageRoot("Stage-Disinfect", typeof(KitCollectStage));
-        Rect(root.transform, "BG", Vector2.zero, new Vector2(12f, 8f), new Color(0.14f, 0.16f, 0.18f), -3);
-        var board = Empty(root.transform, "BoardRoot");
+        var root = NewStageRoot("Stage-Disinfect", typeof(GermShakeStage));
+        Rect(root.transform, "BG", Vector2.zero, new Vector2(12f, 8f), new Color(0.12f, 0.16f, 0.18f), -3);
+        var surface = Square(root.transform, "Surface", Vector2.zero, 3.2f, new Color(0.95f, 0.85f, 0.75f), 1);
+        Rect(surface.transform, "PalmLine", new Vector2(0f, -0.4f), new Vector2(1.8f, 0.12f),
+            new Color(0.85f, 0.7f, 0.6f), 2);
+        var germRoot = Empty(surface.transform, "GermRoot");
+        RectScaled(root.transform, "ProgressTrack", new Vector2(0f, -3.3f), new Vector2(4.2f, 0.25f),
+            new Color(0.2f, 0.22f, 0.24f), 1);
+        var fill = RectScaled(root.transform, "ProgressFill", new Vector2(-2f, -3.3f), new Vector2(0.08f, 0.22f),
+            new Color(0.4f, 0.9f, 0.45f), 2);
         SaveStage("Stage-Disinfect", root, so =>
         {
-            Bind(so, "boardRoot", board.transform);
-            Bind(so, "cellPrefab", s.Cell);
+            Bind(so, "surface", surface.transform);
+            Bind(so, "germRoot", germRoot.transform);
+            Bind(so, "progressFill", fill.transform);
+            Bind(so, "germPrefab", s.Mist);
         });
     }
 
