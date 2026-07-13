@@ -17,8 +17,10 @@ public class FireHealth : MonoBehaviour
     [SerializeField] private bool destroyOnExtinguished = true;
     [SerializeField] private GameObject extinguishedEffectPrefab;
 
+    private FireSpawner spawner;
     private float currentHealth;
     private bool isExtinguished;
+    private bool isRegistered;
 
     public event Action<FireHealth, float, float> HealthChanged;
     public event Action<FireHealth> Extinguished;
@@ -32,23 +34,27 @@ public class FireHealth : MonoBehaviour
     private void Awake()
     {
         if (!resetHealthOnEnable)
-        {
             ResetHealth();
-        }
     }
 
     private void OnEnable()
     {
         if (resetHealthOnEnable)
-        {
             ResetHealth();
-        }
+
+        TryRegister();
     }
 
     private void OnValidate()
     {
         smallFireMaxHealth = Mathf.Max(1f, smallFireMaxHealth);
         largeFireMaxHealth = Mathf.Max(smallFireMaxHealth, largeFireMaxHealth);
+    }
+
+    public void BindSpawner(FireSpawner owner)
+    {
+        spawner = owner;
+        TryRegister();
     }
 
     public void SetFireSize(FireSize newFireSize, bool resetHealth = true)
@@ -75,9 +81,7 @@ public class FireHealth : MonoBehaviour
     public void TakeExtinguishDamage(float amount)
     {
         if (isExtinguished || amount <= 0f)
-        {
             return;
-        }
 
         currentHealth = Mathf.Clamp(currentHealth - amount, 0f, MaxHealth);
 
@@ -93,12 +97,19 @@ public class FireHealth : MonoBehaviour
     public void ExtinguishImmediately()
     {
         if (isExtinguished)
-        {
             return;
-        }
 
         currentHealth = 0f;
         Extinguish();
+    }
+
+    private void TryRegister()
+    {
+        if (isRegistered || spawner == null)
+            return;
+
+        spawner.Register(this);
+        isRegistered = true;
     }
 
     private void Extinguish()
@@ -110,24 +121,29 @@ public class FireHealth : MonoBehaviour
         SpawnExtinguishedEffect();
         Extinguished?.Invoke(this);
 
+        if (spawner != null)
+            spawner.NotifyFireCleared(this);
+
+        // 맵 전환이 한 프레임 밀리므로 바로 숨김
+        foreach (var renderer in GetComponentsInChildren<Renderer>())
+            renderer.enabled = false;
+
+        foreach (var col in GetComponentsInChildren<Collider2D>())
+            col.enabled = false;
+
         if (destroyOnExtinguished)
-        {
             Destroy(gameObject);
-        }
         else
-        {
             gameObject.SetActive(false);
-        }
     }
 
     private void SpawnExtinguishedEffect()
     {
         if (extinguishedEffectPrefab == null)
-        {
             return;
-        }
 
-        Instantiate(extinguishedEffectPrefab, transform.position, transform.rotation);
+        var parent = spawner != null ? spawner.transform : transform.parent;
+        Instantiate(extinguishedEffectPrefab, transform.position, transform.rotation, parent);
     }
 
     private void NotifyHealthChanged()

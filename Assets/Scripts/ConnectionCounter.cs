@@ -9,5 +9,9 @@ public class ConnectionCounter : MonoBehaviour
     public void OnConnected()
     {
         count--;
+        if (count <= 0)
+        {
+            GameManager.Instance.RequestNextMap();
+        }
     }
 }

@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class FallingRoomController : MapBase
+public class FallingRoomController : MonoBehaviour
 {
     [Header("Room")]
     [SerializeField] private Transform player;
@@ -56,7 +56,6 @@ public class FallingRoomController : MapBase
 
         if (Vector2.Distance(player.position, exitPoint.position) <= exitRadius)
         {
-            CompleteMission();
             StopHazards();
         }
     }
@@ -106,7 +105,6 @@ public class FallingRoomController : MapBase
         }
 
         StopHazards();
-        FailMission();
     }
 
     private IEnumerator SpawnHazardsRoutine()

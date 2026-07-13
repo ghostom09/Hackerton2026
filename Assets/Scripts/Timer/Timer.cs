@@ -1,51 +1,59 @@
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class Timer : MonoBehaviour
 {
     [SerializeField] private TMP_Text timerText;
+    [SerializeField] private Slider timeSlider;
 
     private float remainingTime;
+    private float maxTime;
     private bool isRunning;
 
     public int RemainingSeconds => Mathf.CeilToInt(remainingTime);
+    public float RemainingNormalized => maxTime <= 0f ? 0f : Mathf.Clamp01(remainingTime / maxTime);
 
-    void Awake()
+    private void Awake()
     {
         if (timerText == null)
-        {
             timerText = GetComponent<TMP_Text>();
-        }
+
+        if (timeSlider == null)
+            timeSlider = GetComponentInChildren<Slider>(true);
     }
 
-    void Start()
-    {
-        OrderSO orderData = GameManager.Instance != null ? GameManager.Instance.GiveData() : null;
-        // int startTime = orderData != null ? orderData.timer : 0;
-        // SetTime(startTime);
-        StartTimer();
-    }
-
-    void Update()
+    private void Update()
     {
         if (!isRunning)
-        {
             return;
-        }
 
         remainingTime = Mathf.Max(0f, remainingTime - Time.deltaTime);
-        UpdateText();
+        UpdateUI();
 
         if (remainingTime <= 0f)
-        {
             isRunning = false;
+    }
+
+    public void BeginOrder(float seconds)
+    {
+        maxTime = Mathf.Max(0f, seconds);
+        remainingTime = maxTime;
+        isRunning = maxTime > 0f;
+
+        if (timeSlider != null)
+        {
+            timeSlider.minValue = 0f;
+            timeSlider.maxValue = 1f;
+            timeSlider.wholeNumbers = false;
         }
+
+        UpdateUI();
     }
 
     public void SetTime(int seconds)
     {
-        remainingTime = Mathf.Max(0, seconds);
-        UpdateText();
+        BeginOrder(seconds);
     }
 
     public void StartTimer()
@@ -58,20 +66,32 @@ public class Timer : MonoBehaviour
         isRunning = false;
     }
 
-    private void UpdateText()
+    /// <summary>남은 시간을 차감하고 UI를 즉시 갱신합니다.</summary>
+    public void ReduceTime(float seconds)
     {
-        if (timerText == null)
-        {
+        if (seconds <= 0f)
             return;
-        }
 
-        timerText.text = FormatTime(RemainingSeconds);
+        remainingTime = Mathf.Max(0f, remainingTime - seconds);
+        if (remainingTime <= 0f)
+            isRunning = false;
+
+        UpdateUI();
+    }
+
+    private void UpdateUI()
+    {
+        if (timerText != null)
+            timerText.text = FormatTime(RemainingSeconds);
+
+        if (timeSlider != null)
+            timeSlider.value = RemainingNormalized;
     }
 
     private static string FormatTime(int totalSeconds)
     {
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
+        var minutes = totalSeconds / 60;
+        var seconds = totalSeconds % 60;
         return $"{minutes:00} : {seconds:00}";
     }
 }
