@@ -18,17 +18,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void Start()
+    void OnEnable()
     {
         RandomMap();
     }
 
-    public void ClearMap()
+    void ClearMap()
     {
         mapData.RemoveAt(index);
     }
 
-    void RandomMap()
+    public void RandomMap()
     {
         if (nowMap)
         {
