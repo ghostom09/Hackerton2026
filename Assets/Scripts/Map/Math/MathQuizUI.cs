@@ -1,22 +1,23 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UIButton = UnityEngine.UI.Button;
+using UIText = UnityEngine.UI.Text;
 
 [DisallowMultipleComponent]
 public class MathQuizUI : MonoBehaviour
 {
     [Header("Blackboard UI")]
-    [SerializeField] private Text questionText;
-    [SerializeField] private Text progressText;
-    [SerializeField] private Text feedbackText;
-    [SerializeField] private Button[] choiceButtons;
-    [SerializeField] private Text[] choiceButtonLabels;
+    [SerializeField] private UIText questionText;
+    [SerializeField] private UIText progressText;
+    [SerializeField] private UIText feedbackText;
+    [SerializeField] private UIButton[] choiceButtons;
+    [SerializeField] private UIText[] choiceButtonLabels;
 
     public bool IsReady => questionText != null && progressText != null && feedbackText != null &&
                            choiceButtons != null && choiceButtons.Length == 4 &&
                            choiceButtonLabels != null && choiceButtonLabels.Length == 4;
     public int ChoiceCount => choiceButtons?.Length ?? 0;
 
-    public Button GetChoiceButton(int index)
+    public UIButton GetChoiceButton(int index)
     {
         return index >= 0 && index < ChoiceCount ? choiceButtons[index] : null;
     }
