@@ -5,6 +5,8 @@ public class Button : MonoBehaviour, IPointerHover, IPointerHoverExit, IPointerC
     [SerializeField] private Sprite exitHoverSprite;
     [SerializeField] private Sprite onHoverSprite;
     [SerializeField] private SpriteRenderer sr;
+    public bool interactable;
+
     public void OnPointerHover()
     {
         sr.sprite = onHoverSprite;
