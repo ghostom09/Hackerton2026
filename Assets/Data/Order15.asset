@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
+  m_Name: Order15
+  m_EditorClassIdentifier: Assembly-CSharp::OrderSO
+  orderDialog: "<type charDelay=0.06><spin><color r=120 g=255 b=140>\uC5F0\uAE30
+    \uC18D\uC744 \uC9C0\uB098 \uBE44\uC0C1\uAD6C\uB85C \uD0C8\uCD9C\uD558\uC138\uC694</color></spin></type>"
+  roomPrefab: {fileID: 768497065323932672, guid: ee794895976a41cc87ede0eadda5ce3e, type: 3}
+  time: 12

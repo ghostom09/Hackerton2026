@@ -127,7 +127,7 @@ public class MagazineGrabChecker : MonoBehaviour
         if (GameManager.Instance != null)
         {
             Debug.Log("clear");
-            // GameManager.Instance.RandomMap();
+            GameManager.Instance.NextMap();
         }
     }
 

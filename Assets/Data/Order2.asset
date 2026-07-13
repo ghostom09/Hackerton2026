@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
   m_Name: Order2
   m_EditorClassIdentifier: Assembly-CSharp::OrderSO
-  orderDialog: "<type charDelay=0.1>\uBC8C@\uB808 \uCEF7!</type>"
+  orderDialog: "<type charDelay=0.06><glitch intensity=3 speed=12><shake intensity=1.5><scramble revealTime=0.45><color r=255 g=120 b=120>\uBC8C\uB808 \uCEF7!</color></scramble></shake></glitch></type>"
   roomPrefab: {fileID: 7886992831985141658, guid: 35695d8bf850a01489bc50fcd642df7c, type: 3}
-  time: 0
+  time: 20
