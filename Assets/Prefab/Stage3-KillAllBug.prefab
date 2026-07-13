@@ -657,7 +657,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2640e93af5c3634294f82d81604022a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BugCounter
-  count: 1
+  count: 3
 --- !u!1 &7886992831985141658
 GameObject:
   m_ObjectHideFlags: 0

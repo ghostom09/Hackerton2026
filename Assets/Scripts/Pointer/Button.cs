@@ -17,6 +17,7 @@ public class Button : MonoBehaviour, IPointerHover, IPointerHoverExit, IPointerC
 
     public void OnPointerClick()
     {
+        GameManager.Instance.RequestNextMap();
         Debug.Log($"[Button] Clicked: {name}", this);
     }
 }

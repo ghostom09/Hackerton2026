@@ -38,11 +38,16 @@ public class OutletHead : MonoBehaviour, IPointerDown, IPointerUp
         if (!IsConnected && _isDragging && targetCamera != null)
         {
             var mouse = Mouse.current;
-            if (mouse != null)
+            if (mouse != null && targetCamera != null && targetCamera.isActiveAndEnabled)
             {
-                var worldPos = targetCamera.ScreenToWorldPoint(mouse.position.ReadValue());
-                worldPos.z = _z;
-                transform.position = worldPos;
+                var screenPos = mouse.position.ReadValue();
+                if (!float.IsNaN(screenPos.x) && !float.IsNaN(screenPos.y) &&
+                    !float.IsInfinity(screenPos.x) && !float.IsInfinity(screenPos.y))
+                {
+                    var worldPos = targetCamera.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, 0f));
+                    worldPos.z = _z;
+                    transform.position = worldPos;
+                }
             }
         }
 
