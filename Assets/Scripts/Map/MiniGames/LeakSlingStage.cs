@@ -14,6 +14,7 @@ public class LeakSlingStage : MonoBehaviour
     [SerializeField] private Transform pullMarker;
     [SerializeField] private Transform bandVisual;
     [SerializeField] private Transform floodFill;
+    [SerializeField] private Transform overflowLine;
     [SerializeField] private Transform spawnParent;
     [SerializeField] private GameObject patchPrefab;
     [SerializeField] private GameObject leakPrefab;
@@ -34,8 +35,15 @@ public class LeakSlingStage : MonoBehaviour
     [SerializeField] private float leakMaxY = 3.4f;
     [SerializeField] private float projectileLife = 2.2f;
 
+    [Header("Trajectory Preview")]
+    [SerializeField] private int trajectoryPointCount = 12;
+    [SerializeField, Range(0.1f, 1f)] private float trajectoryPreviewRatio = 0.22f;
+    [SerializeField] private float trajectoryMaxDistance = 3.5f;
+    [SerializeField] private float trajectoryDotSize = 0.1f;
+
     private readonly List<LeakBlob> _leaks = new();
     private readonly List<PatchShot> _shots = new();
+    private readonly List<Transform> _trajectoryPoints = new();
     private bool _dragging;
     private bool _complete;
     private int _seals;
@@ -44,6 +52,7 @@ public class LeakSlingStage : MonoBehaviour
     private Vector3 _floodBasePos;
     private Vector3 _floodBaseScale;
     private Vector3 _bandBaseScale;
+    private Sprite _trajectorySprite;
 
     private struct LeakBlob
     {
@@ -68,10 +77,21 @@ public class LeakSlingStage : MonoBehaviour
         {
             _floodBasePos = floodFill.localPosition;
             _floodBaseScale = floodFill.localScale;
+
+            if (overflowLine != null)
+            {
+                var overflowHeight = Mathf.Lerp(0.08f, floodMaxHeight, 0.98f);
+                overflowLine.localPosition = new Vector3(
+                    overflowLine.localPosition.x,
+                    _floodBasePos.y + overflowHeight,
+                    overflowLine.localPosition.z);
+            }
         }
 
         if (bandVisual != null)
             _bandBaseScale = bandVisual.localScale;
+
+        CreateTrajectoryPreview();
 
         if (pullMarker != null)
             pullMarker.gameObject.SetActive(false);
@@ -118,6 +138,7 @@ public class LeakSlingStage : MonoBehaviour
                 pullMarker.position = slingAnchor.position + (Vector3)pull;
 
             UpdateBand(pull);
+            UpdateTrajectoryPreview(pull);
         }
 
         if (_dragging && Mouse.current.leftButton.wasReleasedThisFrame)
@@ -131,7 +152,53 @@ public class LeakSlingStage : MonoBehaviour
                 pullMarker.gameObject.SetActive(false);
             if (bandVisual != null)
                 bandVisual.gameObject.SetActive(false);
+            SetTrajectoryVisible(false);
         }
+    }
+
+    private void CreateTrajectoryPreview()
+    {
+        _trajectorySprite = Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 4, 4), Vector2.one * 0.5f, 4f);
+        for (var i = 0; i < trajectoryPointCount; i++)
+        {
+            var point = new GameObject("TrajectoryPoint");
+            point.transform.SetParent(spawnParent, false);
+            point.transform.localScale = Vector3.one * trajectoryDotSize;
+
+            var renderer = point.AddComponent<SpriteRenderer>();
+            renderer.sprite = _trajectorySprite;
+            renderer.color = new Color(1f, 1f, 1f, 0.75f);
+            renderer.sortingOrder = 4;
+
+            point.SetActive(false);
+            _trajectoryPoints.Add(point.transform);
+        }
+    }
+
+    private void UpdateTrajectoryPreview(Vector2 pull)
+    {
+        var speed = launchSpeed * Mathf.Clamp01(pull.magnitude / maxPull);
+        if (speed <= 0.01f)
+        {
+            SetTrajectoryVisible(false);
+            return;
+        }
+
+        var velocity = -pull.normalized * speed;
+        var previewTime = Mathf.Min(projectileLife * trajectoryPreviewRatio, trajectoryMaxDistance / speed);
+        for (var i = 0; i < _trajectoryPoints.Count; i++)
+        {
+            var time = previewTime * (i + 1) / _trajectoryPoints.Count;
+            var offset = velocity * time + Vector2.down * (4.5f * time * time);
+            _trajectoryPoints[i].position = slingAnchor.position + (Vector3)offset;
+            _trajectoryPoints[i].gameObject.SetActive(true);
+        }
+    }
+
+    private void SetTrajectoryVisible(bool visible)
+    {
+        foreach (var point in _trajectoryPoints)
+            point.gameObject.SetActive(visible);
     }
 
     private void UpdateBand(Vector2 pull)
@@ -300,6 +367,7 @@ public class LeakSlingStage : MonoBehaviour
     {
         _complete = true;
         _dragging = false;
+        SetTrajectoryVisible(false);
         MiniGameClear.RequestNext();
     }
 }
