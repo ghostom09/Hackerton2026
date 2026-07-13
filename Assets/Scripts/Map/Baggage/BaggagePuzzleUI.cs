@@ -54,8 +54,13 @@ public class BaggagePuzzleUI : MonoBehaviour
         if (backButton == null)
             return;
 
+<<<<<<< HEAD
         // backButton.onClick.RemoveAllListeners();
         // backButton.onClick.AddListener(ReturnToStart);
+=======
+        //backButton.onClick.RemoveAllListeners();
+        //backButton.onClick.AddListener(ReturnToStart);
+>>>>>>> origin/Map
     }
 
     public void SetMission(string text)
@@ -75,8 +80,13 @@ public class BaggagePuzzleUI : MonoBehaviour
 
     public void SetCanUndo(bool canUndo)
     {
+<<<<<<< HEAD
         // if (backButton != null)
             // backButton.interactable = canUndo;
+=======
+        //if (backButton != null)
+            //backButton.interactable = canUndo;
+>>>>>>> origin/Map
     }
 
     private void ReturnToStart()
