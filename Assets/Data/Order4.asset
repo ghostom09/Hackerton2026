@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
   m_Name: Order4
   m_EditorClassIdentifier: Assembly-CSharp::OrderSO
-  orderDialog: "<type charDelay=0.1>\uBD88\uC774\uC57C!</type>"
-  roomPrefab: {fileID: 7520158717241343552, guid: 649aa56a31fa0114ca48f0a34006f2ca, type: 3}
-  time: 0
+  orderDialog: "<type charDelay=0.06><color r=255 g=110 b=60><flicker speed=12 minAlpha=0.55><drip amplitude=6 speed=2 stretch=0.15><shake intensity=1.2>\uBD88\uC774\uC57C!</shake></drip></flicker></color></type>"
+  roomPrefab: {fileID: 5420150452679495943, guid: 649aa56a31fa0114ca48f0a34006f2ca, type: 3}
+  time: 30

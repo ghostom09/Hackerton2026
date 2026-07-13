@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
   m_Name: Order1
   m_EditorClassIdentifier: Assembly-CSharp::OrderSO
-  orderDialog: "<type charDelay=0.1>\uBC84\uD2BC\uC744 \uB204\uB974\uC138\uC694</type>"
+  orderDialog: "<type charDelay=0.06><bounce amplitude=6 frequency=5><pulse speed=3 intensity=0.12><color r=120 g=210 b=255>\uBC84\uD2BC\uC744 \uB204\uB974\uC138\uC694</color></pulse></bounce></type>"
   roomPrefab: {fileID: 4754107471900814782, guid: f1035623b738eac41b99825ff1fa1ace, type: 3}
   time: 5

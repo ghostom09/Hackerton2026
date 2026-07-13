@@ -32,7 +32,10 @@ public class Timer : MonoBehaviour
         UpdateUI();
 
         if (remainingTime <= 0f)
+        {
             isRunning = false;
+            Debug.Log("[Timer] 게임 끝!");
+        }
     }
 
     public void BeginOrder(float seconds)
