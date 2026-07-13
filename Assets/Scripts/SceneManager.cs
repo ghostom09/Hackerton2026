@@ -4,9 +4,6 @@ public enum SceneName
 {
     MainMenu,
     InGame,
-    HappyEnding,
-    SadEnding,
-    Ending,
 }
 
 public class SceneManager : MonoBehaviour
@@ -28,8 +25,6 @@ public class SceneManager : MonoBehaviour
         string sceneName = scene switch
         {
             SceneName.InGame => "InGameScene",
-            SceneName.SadEnding => "BadEnding",
-            SceneName.Ending => "Ending",
             _ => scene.ToString(),
         };
 

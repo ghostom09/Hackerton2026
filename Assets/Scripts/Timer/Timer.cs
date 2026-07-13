@@ -14,6 +14,7 @@ public class Timer : MonoBehaviour
     private bool _expiredRaised;
 
     public event Action TimeExpired;
+    public event Action<float> TimeReduced;
 
     public int RemainingSeconds => Mathf.CeilToInt(remainingTime);
     public float RemainingNormalized => maxTime <= 0f ? 0f : Mathf.Clamp01(remainingTime / maxTime);
@@ -83,7 +84,12 @@ public class Timer : MonoBehaviour
         if (seconds <= 0f)
             return;
 
+        var previousTime = remainingTime;
         remainingTime = Mathf.Max(0f, remainingTime - seconds);
+        var reducedAmount = previousTime - remainingTime;
+        if (reducedAmount > 0f)
+            TimeReduced?.Invoke(reducedAmount);
+
         if (remainingTime <= 0f)
         {
             isRunning = false;

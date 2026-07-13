@@ -48,7 +48,17 @@ public class UIManager : MonoBehaviour
 
     public void CompleteMap()
     {
-        ShowEmotion(charEmotion.happy);
+        ShowTemporaryEmotion(charEmotion.happy);
+    }
+
+    public void ShowSadForTimerReduced()
+    {
+        ShowTemporaryEmotion(charEmotion.sad);
+    }
+
+    public void ShowTemporaryEmotion(charEmotion emotion)
+    {
+        ShowEmotion(emotion);
 
         if (_emotionRoutine != null)
             StopCoroutine(_emotionRoutine);

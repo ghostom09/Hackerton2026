@@ -13,21 +13,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Timer timer;
     [SerializeField] private Behaviour[] playerGameplayBehaviours;
 
-    public EndingType currentEnding { get; private set; } = EndingType.None;
     public int currentMapIndex { get; private set; } = -1;
     public int totalMapCount { get; private set; }
     public float currentMapTime { get; private set; }
     public float currentMapMaxTime { get; private set; }
-    public int deathCount { get; private set; }
     public float totalPlayTime { get; private set; }
-    public bool isGameEnded { get; private set; }
+    public bool isGameStopped { get; private set; }
 
     private readonly List<OrderSO> _runtimeOrders = new();
     private GameObject _currentMap;
     private bool _isSwitchingMap;
     private Coroutine _nextMapRoutine;
-    private Coroutine _badEndingPhoneRoutine;
-    private BadEndingPhonePrompt _badEndingPhone;
 
     public OrderSO NowMap { get; private set; }
     public int Time => Mathf.CeilToInt(currentMapTime);
@@ -40,28 +36,33 @@ public class GameManager : MonoBehaviour
         Instance = this;
         textCore ??= FindFirstObjectByType<TextCore>();
         timer ??= FindFirstObjectByType<Timer>();
+        if (timer != null)
+            timer.TimeReduced += HandleTimerReduced;
+
         BuildRuntimeOrders();
         totalMapCount = _runtimeOrders.Count;
-        GameResultManager.Instance?.BeginRun();
     }
 
     private void Start() => LoadNextMap();
 
     private void Update()
     {
-        if (isGameEnded) return;
+        if (isGameStopped) return;
         totalPlayTime += UnityEngine.Time.deltaTime;
         UpdateMapTimer();
     }
 
     private void OnDestroy()
     {
+        if (timer != null)
+            timer.TimeReduced -= HandleTimerReduced;
+
         if (Instance == this) Instance = null;
     }
 
     public void StartMapTimer(float mapTime)
     {
-        if (isGameEnded) return;
+        if (isGameStopped) return;
         currentMapMaxTime = Mathf.Max(0f, mapTime);
         currentMapTime = currentMapMaxTime;
         timer?.BeginOrder(currentMapMaxTime);
@@ -69,21 +70,21 @@ public class GameManager : MonoBehaviour
 
     public void UpdateMapTimer()
     {
-        if (isGameEnded || currentMapMaxTime <= 0f) return;
+        if (isGameStopped || currentMapMaxTime <= 0f) return;
         currentMapTime = timer != null ? timer.RemainingTime : Mathf.Max(0f, currentMapTime - UnityEngine.Time.deltaTime);
-        if (currentMapTime <= 0f) TriggerBadEnding();
+        if (currentMapTime <= 0f) StopRun();
     }
 
     public void CompleteCurrentMap()
     {
-        if (isGameEnded) return;
+        if (isGameStopped) return;
         timer?.StopTimer();
         currentMapTime = timer != null ? timer.RemainingTime : currentMapTime;
     }
 
     public void RequestNextMap()
     {
-        if (isGameEnded || _isSwitchingMap) return;
+        if (isGameStopped || _isSwitchingMap) return;
         CompleteCurrentMap();
         _isSwitchingMap = true;
         UIManager.Instance?.CompleteMap();
@@ -98,27 +99,13 @@ public class GameManager : MonoBehaviour
         else RequestNextMap();
     }
 
-    public void NotifyFinalDoorOpened()
+    public void StopRun()
     {
-        if (!isGameEnded && currentMapIndex >= totalMapCount - 1)
-        {
-            CompleteCurrentMap();
-            TriggerHappyEnding();
-        }
-    }
-
-    public void TriggerHappyEnding() => TriggerEnding(EndingType.Happy);
-
-    public void TriggerBadEnding()
-    {
-        if (isGameEnded || _badEndingPhoneRoutine != null) return;
-        deathCount++;
-        isGameEnded = true;
-        currentEnding = EndingType.Bad;
+        if (isGameStopped) return;
+        isGameStopped = true;
         currentMapTime = 0f;
+        UIManager.Instance?.ShowEmotion(charEmotion.menhara);
         StopAllGameplay();
-        UIManager.Instance?.ShowEmotion(charEmotion.mad);
-        _badEndingPhoneRoutine = StartCoroutine(ShowBadEndingPhoneAfterDelay());
     }
 
     public void StopAllGameplay()
@@ -127,8 +114,6 @@ public class GameManager : MonoBehaviour
         if (_nextMapRoutine != null) StopCoroutine(_nextMapRoutine);
         if (_currentMap != null) _currentMap.SetActive(false);
 
-        // This optional inspector list is not assigned in InGameScene.
-        // Iterating a null array caused the timeout ending to throw before changing scenes.
         if (playerGameplayBehaviours != null)
         {
             foreach (var behaviour in playerGameplayBehaviours)
@@ -147,13 +132,13 @@ public class GameManager : MonoBehaviour
 
     private void LoadNextMap()
     {
-        if (isGameEnded) return;
+        if (isGameStopped) return;
         if (_currentMap != null) Destroy(_currentMap);
         currentMapIndex++;
-        if (currentMapIndex >= totalMapCount) { TriggerHappyEnding(); return; }
+        if (currentMapIndex >= totalMapCount) { StopRun(); return; }
 
         NowMap = _runtimeOrders[currentMapIndex];
-        if (NowMap == null || NowMap.roomPrefab == null) { TriggerBadEnding(); return; }
+        if (NowMap == null || NowMap.roomPrefab == null) { StopRun(); return; }
         _currentMap = Instantiate(NowMap.roomPrefab, mapSpawnPosition, Quaternion.identity);
         if (_currentMap.TryGetComponent<MapBase>(out var mapBase)) mapBase.Init(NowMap);
         StartMapTimer(NowMap.time);
@@ -171,41 +156,17 @@ public class GameManager : MonoBehaviour
         _isSwitchingMap = false;
         _nextMapRoutine = null;
         if (currentMapIndex >= totalMapCount - 1)
-            TriggerHappyEnding();
+            StopRun();
         else
             LoadNextMap();
     }
 
-    private void TriggerEnding(EndingType ending)
+    private void HandleTimerReduced(float amount)
     {
-        if (isGameEnded) return;
-        isGameEnded = true;
-        CompleteEnding(ending);
-    }
+        if (isGameStopped || amount <= 0f)
+            return;
 
-    private IEnumerator ShowBadEndingPhoneAfterDelay()
-    {
-        yield return new WaitForSecondsRealtime(1f);
-        _badEndingPhone ??= gameObject.AddComponent<BadEndingPhonePrompt>();
-        _badEndingPhone.Show(CompleteBadEndingAfterPhoneAnswer);
-    }
-
-    private void CompleteBadEndingAfterPhoneAnswer()
-    {
-        if (currentEnding != EndingType.Bad) return;
-        _badEndingPhoneRoutine = null;
-        CompleteEnding(EndingType.Bad);
-    }
-
-    private void CompleteEnding(EndingType ending)
-    {
-        currentEnding = ending;
-        currentMapTime = 0f;
-        GameResultManager.Instance?.SaveResult(ending, totalPlayTime, deathCount, currentMapIndex, timer != null ? timer.RemainingTime : 0f);
-        StopAllGameplay();
-        var scene = ending == EndingType.Bad ? SceneName.SadEnding : SceneName.HappyEnding;
-        if (SceneManager.Instance != null) SceneManager.Instance.ChangeScene(scene);
-        else UnityEngine.SceneManagement.SceneManager.LoadScene(ending == EndingType.Bad ? "BadEnding" : "HappyEnding");
+        UIManager.Instance?.ShowSadForTimerReduced();
     }
 
     private void BuildRuntimeOrders()

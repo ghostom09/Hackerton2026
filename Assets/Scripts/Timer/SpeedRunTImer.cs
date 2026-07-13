@@ -1,13 +1,13 @@
 using UnityEngine;
 
-public class SpeedRunTIier : MonoBehaviour
+public class SpeedRunTImer : MonoBehaviour
 {
     private float elapsedTime;
     private bool isRunning;
 
     public float ElapsedTime => elapsedTime;
     public int ElapsedSeconds => Mathf.FloorToInt(elapsedTime);
-    public string FormattedTime => FormatTime(ElapsedSeconds);
+    public string FormattedTime => FormatTime(elapsedTime);
 
     void Start()
     {
@@ -39,10 +39,12 @@ public class SpeedRunTIier : MonoBehaviour
         elapsedTime = 0f;
     }
 
-    private static string FormatTime(int totalSeconds)
+    private static string FormatTime(float totalSeconds)
     {
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        return $"{minutes:00} : {seconds:00}";
+        totalSeconds = Mathf.Max(0f, totalSeconds);
+        int minutes = Mathf.FloorToInt(totalSeconds / 60f);
+        int seconds = Mathf.FloorToInt(totalSeconds % 60f);
+        int centiseconds = Mathf.FloorToInt((totalSeconds - Mathf.Floor(totalSeconds)) * 100f);
+        return $"{minutes:00}:{seconds:00}.{centiseconds:00}";
     }
 }
