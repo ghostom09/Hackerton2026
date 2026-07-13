@@ -69,6 +69,19 @@ public class Timer : MonoBehaviour
         isRunning = false;
     }
 
+    /// <summary>남은 시간을 차감하고 UI를 즉시 갱신합니다.</summary>
+    public void ReduceTime(float seconds)
+    {
+        if (seconds <= 0f)
+            return;
+
+        remainingTime = Mathf.Max(0f, remainingTime - seconds);
+        if (remainingTime <= 0f)
+            isRunning = false;
+
+        UpdateUI();
+    }
+
     private void UpdateUI()
     {
         if (timerText != null)
