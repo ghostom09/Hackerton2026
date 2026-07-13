@@ -3,9 +3,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Order", menuName = "Scriptable Objects/Order")]
 public class OrderSO : ScriptableObject
 {
-    public string orderName;
+    [TextArea(3, 10)]
+    public string orderDialog;
     public GameObject roomPrefab;
-    
-    [TextArea(3, 8)]
-    public string requestDialogue;
+    public float time;
 }
