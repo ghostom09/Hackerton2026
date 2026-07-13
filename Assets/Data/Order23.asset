@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::OrderSO
   orderDialog: "<type charDelay=0.06><drip><color r=100 g=210 b=255>\uB9C8\uC6B0\uC2A4\uB97C
     \uD754\uB4E4\uC5B4 \uC138\uADE0\uC744 \uB5A8\uC5B4\uB728\uB9AC\uC138\uC694!</color></drip></type>"
-  roomPrefab: {fileID: 898910976958981248, guid: 622e93c1ec064c3eb8cfbb0513b5330c, type: 3}
+  roomPrefab: {fileID: 571203448346189824, guid: a0c0ecb1770442a6ab649291f776565c, type: 3}
   time: 20
