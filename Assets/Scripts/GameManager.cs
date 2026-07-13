@@ -6,8 +6,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     
-    // public List<> mapData = new();
-    // public -- nowMap;
+    public List<OrderSO> mapData = new();
+    public OrderSO nowMap;
     public int index;
     
     void Awake()
@@ -20,32 +20,32 @@ public class GameManager : MonoBehaviour
         else Destroy(this);
     }
 
-    void Start()
+    void OnEnable()
     {
         RandomMap();
     }
 
-    public void ClearMap()
+    void ClearMap()
     {
-        // mapData.RemoveAt(index);
+        mapData.RemoveAt(index);
     }
 
-    void RandomMap()
+    public void RandomMap()
     {
-        // if (nowMap)
-        // {
-        //     ClearMap();
-        // }
+        if (nowMap)
+        {
+            ClearMap();
+        }
         
-        // int num = mapData.Count;
+        int num = mapData.Count;
         
-        // index = UnityEngine.Random.Range(0, num);
+        index = UnityEngine.Random.Range(0, num);
         
-        // nowMap = mapData[index];
+        nowMap = mapData[index];
     }
 
-    // public (data) GiveData()
-    // {
-    //     return nowMap;
-    // }
+    public OrderSO GiveData()
+    {
+        return nowMap;
+    }
 }
