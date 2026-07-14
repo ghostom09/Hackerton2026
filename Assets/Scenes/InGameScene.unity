@@ -235,11 +235,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 74cfd10ab9ab4271bdb80b0e0482371f, type: 2}
   - {fileID: 11400000, guid: 3971ecd29f13433b8a11f4015920b00e, type: 2}
   - {fileID: 11400000, guid: d2d16947945e42efb6c348d299e14b4a, type: 2}
+  - {fileID: 11400000, guid: 023ac4fab7b24029abcf2e2a0a898643, type: 2}
   - {fileID: 11400000, guid: 76cfafa6af4c464d99a1fe25a08e6004, type: 2}
   - {fileID: 11400000, guid: 23c76dcceb8744299d0d790224f2c9d6, type: 2}
   - {fileID: 11400000, guid: 0995a57561fa4cc5959606a7ac2e6776, type: 2}
-  - {fileID: 11400000, guid: 986389ae11814671ab3bddb14bad6227, type: 2}
   - {fileID: 11400000, guid: ecff0f46a5bf454f939369e2ec0bd708, type: 2}
+  - {fileID: 11400000, guid: 85d7683ae41759248aa1f876d9c59043, type: 2}
   - {fileID: 11400000, guid: a712646b2bdb45c0a22f87af27f5798c, type: 2}
   - {fileID: 11400000, guid: e1188cba110a48b0882d09e30f2192e7, type: 2}
   - {fileID: 11400000, guid: 5bc16afa1fca490ab4e629732f218a96, type: 2}
@@ -248,7 +249,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 15adc08b30bb4871b9b82b3c14f33ce5, type: 2}
   - {fileID: 11400000, guid: 277b2cb6a6164210bd7bf60527879dd0, type: 2}
   - {fileID: 11400000, guid: 5bc856b4b74a45568a4e7c291e1d567a, type: 2}
-  - {fileID: 11400000, guid: 9c0369f419c949218ab4d28c3f0fe6a4, type: 2}
   mapSpawnPosition: {x: 0, y: 0}
   textCore: {fileID: 1713712350}
   timer: {fileID: 549827327}

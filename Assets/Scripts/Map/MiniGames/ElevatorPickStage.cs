@@ -9,12 +9,10 @@ public class ElevatorPickStage : MonoBehaviour
     [SerializeField] private Camera targetCamera;
     [SerializeField] private MiniGameTarget[] elevators;
     [SerializeField] private TextMeshProUGUI[] doorLabels;
+    [SerializeField] private GameObject checkPrefab;
 
     private bool _complete;
     private int _safeIndex = -1;
-
-    private static readonly Color UnsafeDoorColor = new(0.55f, 0.25f, 0.25f);
-    private static readonly Color UnsafeLightColor = new(0.95f, 0.25f, 0.2f);
 
     private void Awake()
     {
@@ -71,22 +69,8 @@ public class ElevatorPickStage : MonoBehaviour
             if (isSafe)
                 _safeIndex = i;
 
-            SetElevatorVisual(elevator);
             SetDoorLabel(i, isSafe);
         }
-    }
-
-    private static void SetElevatorVisual(MiniGameTarget elevator)
-    {
-        var doorRenderer = MiniGameVisuals.FindSprite(elevator);
-        if (doorRenderer != null)
-            doorRenderer.color = UnsafeDoorColor;
-
-        var light = elevator.transform.Find("Light");
-        var lightRenderer = light != null ? MiniGameVisuals.FindSprite(light) : null;
-        if (lightRenderer != null)
-            lightRenderer.color = UnsafeLightColor;
-
     }
 
     private void SetDoorLabel(int index, bool isSafe)
@@ -117,10 +101,7 @@ public class ElevatorPickStage : MonoBehaviour
 
             if (i == _safeIndex)
             {
-                var renderer = MiniGameVisuals.FindSprite(elevators[i]);
-                if (renderer != null)
-                    renderer.color = new Color(0.3f, 0.9f, 0.45f);
-                Complete();
+                StartCoroutine(ShowCheckAndComplete(elevators[i]));
             }
             else
             {
@@ -128,6 +109,22 @@ public class ElevatorPickStage : MonoBehaviour
             }
             return;
         }
+    }
+
+    private System.Collections.IEnumerator ShowCheckAndComplete(MiniGameTarget elevator)
+    {
+        _complete = true;
+
+        if (checkPrefab != null && elevator != null)
+        {
+            var check = Instantiate(checkPrefab, elevator.transform.position, Quaternion.identity, transform);
+            var checkRenderer = check.GetComponentInChildren<SpriteRenderer>(true);
+            if (checkRenderer != null)
+                checkRenderer.sortingOrder = 5;
+        }
+
+        yield return new WaitForSeconds(0.45f);
+        Complete();
     }
 
     private void Complete()

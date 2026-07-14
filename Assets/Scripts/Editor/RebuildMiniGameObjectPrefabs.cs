@@ -15,6 +15,7 @@ public static class RebuildMiniGameObjectPrefabs
     private const string ArtRoot = "Assets/Art/MiniGames";
     private const string SquareSpritePath = ArtRoot + "/WhiteSquare.png";
     private const string RebuildVersionKey = "Hackerton.MiniGameRectSpriteRebuild.v9";
+    private const string RockSpritePath = "Assets/Sprites/Rock.png";
 
     private static Sprite _square;
 
@@ -150,6 +151,7 @@ public static class RebuildMiniGameObjectPrefabs
     private class Spawnables
     {
         public GameObject Cell;
+        public GameObject FallingRock;
         public GameObject Meteor;
         public GameObject Flash;
         public GameObject Car;
@@ -172,6 +174,9 @@ public static class RebuildMiniGameObjectPrefabs
         return new Spawnables
         {
             Cell = SaveSpawnable("Cell", RectScaled(null, "Cell", Vector2.zero, Vector2.one, new Color(0.75f, 0.75f, 0.78f), 2)),
+            // Keep CatchGlass debris as an editable, stage-specific prefab.  The SpriteRenderer
+            // is on the root because DebrisPaddleStage randomizes the root scale at runtime.
+            FallingRock = SaveSpawnable("FallingRock", SpriteScaled(null, "FallingRock", Vector2.zero, Vector2.one, RockSpritePath, Color.white, 2)),
             Meteor = SaveSpawnable("Meteor", RectScaled(null, "Meteor", Vector2.zero, Vector2.one, new Color(0.85f, 0.35f, 0.12f), 3)),
             Flash = SaveSpawnable("Flash", RectScaled(null, "Flash", Vector2.zero, Vector2.one * 0.45f, Color.yellow, 5)),
             Car = SaveSpawnable("Car", RectScaled(null, "Car", Vector2.zero, new Vector2(1.6f, 0.7f), new Color(0.9f, 0.25f, 0.2f), 3)),
@@ -317,6 +322,16 @@ public static class RebuildMiniGameObjectPrefabs
         sr.color = color;
         sr.sortingOrder = order;
         sr.drawMode = SpriteDrawMode.Simple;
+        return go;
+    }
+
+    /// <summary>Creates a runtime-scaled spawnable whose image can be replaced in its prefab.</summary>
+    private static GameObject SpriteScaled(Transform parent, string name, Vector2 pos, Vector2 size, string spritePath, Color color, int order)
+    {
+        var go = RectScaled(parent, name, pos, size, color, order);
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+        if (sprite != null)
+            go.GetComponent<SpriteRenderer>().sprite = sprite;
         return go;
     }
 
@@ -625,7 +640,7 @@ public static class RebuildMiniGameObjectPrefabs
         {
             Bind(so, "paddle", paddle.transform);
             Bind(so, "spawnParent", spawn.transform);
-            Bind(so, "debrisPrefab", s.Cell);
+            Bind(so, "debrisPrefab", s.FallingRock);
             Bind(so, "groundLine", ground.transform);
         });
     }
