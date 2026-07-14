@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,152 +11,172 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Vector2 mapSpawnPosition;
     [SerializeField] private TextCore textCore;
     [SerializeField] private Timer timer;
+    [SerializeField] private Behaviour[] playerGameplayBehaviours;
+
+    public int currentMapIndex { get; private set; } = -1;
+    public int totalMapCount { get; private set; }
+    public float currentMapTime { get; private set; }
+    public float currentMapMaxTime { get; private set; }
+    public float totalPlayTime { get; private set; }
+    public bool isGameStopped { get; private set; }
 
     private readonly List<OrderSO> _runtimeOrders = new();
-    private int _currentIndex = -1;
     private GameObject _currentMap;
     private bool _isSwitchingMap;
     private Coroutine _nextMapRoutine;
 
     public OrderSO NowMap { get; private set; }
-    public int Time { get; private set; }
-
-    // 기존 Timer 호환
+    public int Time => Mathf.CeilToInt(currentMapTime);
     public int time => Time;
     public OrderSO nowMap => NowMap;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-
-        if (textCore == null)
-            textCore = FindFirstObjectByType<TextCore>();
-
-        if (timer == null)
-            timer = FindFirstObjectByType<Timer>();
+        textCore ??= FindFirstObjectByType<TextCore>();
+        timer ??= FindFirstObjectByType<Timer>();
+        if (timer != null)
+            timer.TimeReduced += HandleTimerReduced;
 
         BuildRuntimeOrders();
+        totalMapCount = _runtimeOrders.Count;
     }
 
-    private void Start()
+    private void Start() => LoadNextMap();
+
+    private void Update()
     {
-        NextMap();
+        if (isGameStopped) return;
+        totalPlayTime += UnityEngine.Time.deltaTime;
+        UpdateMapTimer();
     }
 
     private void OnDestroy()
     {
-        if (Instance == this)
-            Instance = null;
+        if (timer != null)
+            timer.TimeReduced -= HandleTimerReduced;
+
+        if (Instance == this) Instance = null;
+    }
+
+    public void StartMapTimer(float mapTime)
+    {
+        if (isGameStopped) return;
+        currentMapMaxTime = Mathf.Max(0f, mapTime);
+        currentMapTime = currentMapMaxTime;
+        timer?.BeginOrder(currentMapMaxTime);
+    }
+
+    public void UpdateMapTimer()
+    {
+        if (isGameStopped || currentMapMaxTime <= 0f) return;
+        currentMapTime = timer != null ? timer.RemainingTime : Mathf.Max(0f, currentMapTime - UnityEngine.Time.deltaTime);
+        if (currentMapTime <= 0f) StopRun();
+    }
+
+    public void CompleteCurrentMap()
+    {
+        if (isGameStopped) return;
+        timer?.StopTimer();
+        currentMapTime = timer != null ? timer.RemainingTime : currentMapTime;
     }
 
     public void RequestNextMap()
     {
-        if (_isSwitchingMap)
-            return;
-
+        if (isGameStopped || _isSwitchingMap) return;
+        CompleteCurrentMap();
         _isSwitchingMap = true;
-
-        if (_nextMapRoutine != null)
-            StopCoroutine(_nextMapRoutine);
-
-        _nextMapRoutine = StartCoroutine(NextMapEndOfFrame());
+        UIManager.Instance?.CompleteMap();
+        _nextMapRoutine = StartCoroutine(NextMapAfterCompletionExpression());
     }
+
+    public void MoveToNextMap() => RequestNextMap();
 
     public void NextMap()
     {
-        if (_currentMap != null)
-        {
-            if (_currentIndex + 1 < _runtimeOrders.Count && UIManager.Instance != null)
-                UIManager.Instance.CompleteMap();
+        if (NowMap == null) LoadNextMap();
+        else RequestNextMap();
+    }
 
-            Destroy(_currentMap);
-            _currentMap = null;
+    public void StopRun()
+    {
+        if (isGameStopped) return;
+        isGameStopped = true;
+        currentMapTime = 0f;
+        UIManager.Instance?.ShowEmotion(charEmotion.menhara);
+        StopAllGameplay();
+    }
+
+    public void StopAllGameplay()
+    {
+        timer?.StopTimer();
+        if (_nextMapRoutine != null) StopCoroutine(_nextMapRoutine);
+        if (_currentMap != null) _currentMap.SetActive(false);
+
+        if (playerGameplayBehaviours != null)
+        {
+            foreach (var behaviour in playerGameplayBehaviours)
+                if (behaviour != null) behaviour.enabled = false;
         }
 
-        _currentIndex++;
+        foreach (var movement in FindObjectsByType<PlayerMovement>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            movement.enabled = false;
+        foreach (var attack in FindObjectsByType<PlayerAttack>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            attack.enabled = false;
+        foreach (var input in FindObjectsByType<PlayerInput>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            input.enabled = false;
+    }
 
-        if (_currentIndex >= _runtimeOrders.Count)
-        {
-            NowMap = null;
-            Debug.Log("[GameManager] 더 이상 맵이 없습니다.");
-            return;
-        }
+    public OrderSO GiveData() => NowMap;
 
-        NowMap = _runtimeOrders[_currentIndex];
-        Time = Mathf.RoundToInt(NowMap.time);
+    private void LoadNextMap()
+    {
+        if (isGameStopped) return;
+        if (_currentMap != null) Destroy(_currentMap);
+        currentMapIndex++;
+        if (currentMapIndex >= totalMapCount) { StopRun(); return; }
 
-        if (NowMap.roomPrefab == null)
-        {
-            Debug.LogError($"[GameManager] {NowMap.name}에 roomPrefab이 없습니다.", NowMap);
-            return;
-        }
-
+        NowMap = _runtimeOrders[currentMapIndex];
+        if (NowMap == null || NowMap.roomPrefab == null) { StopRun(); return; }
         _currentMap = Instantiate(NowMap.roomPrefab, mapSpawnPosition, Quaternion.identity);
-
-        if (_currentMap.TryGetComponent<MapBase>(out var mapBase))
-            mapBase.Init(NowMap);
-
-        ApplyOrderUI(NowMap);
+        if (_currentMap.TryGetComponent<MapBase>(out var mapBase)) mapBase.Init(NowMap);
+        StartMapTimer(NowMap.time);
+        if (textCore != null && !string.IsNullOrEmpty(NowMap.orderDialog)) textCore.PlayText(NowMap.orderDialog);
     }
 
-    private void ApplyOrderUI(OrderSO order)
+    private IEnumerator NextMapAfterCompletionExpression()
     {
-        if (timer != null)
-            timer.BeginOrder(order.time);
+        float expressionDuration = UIManager.Instance != null
+            ? UIManager.Instance.CompleteEmotionDuration
+            : 0f;
+        if (expressionDuration > 0f)
+            yield return new WaitForSecondsRealtime(expressionDuration);
 
-        if (textCore != null && !string.IsNullOrEmpty(order.orderDialog))
-            textCore.PlayText(order.orderDialog);
-    }
-
-    private IEnumerator NextMapEndOfFrame()
-    {
-        yield return null;
-        _nextMapRoutine = null;
         _isSwitchingMap = false;
-        NextMap();
+        _nextMapRoutine = null;
+        if (currentMapIndex >= totalMapCount - 1)
+            StopRun();
+        else
+            LoadNextMap();
     }
 
-    public OrderSO GiveData()
+    private void HandleTimerReduced(float amount)
     {
-        return NowMap;
+        if (isGameStopped || amount <= 0f)
+            return;
+
+        UIManager.Instance?.ShowSadForTimerReduced();
     }
 
     private void BuildRuntimeOrders()
     {
         _runtimeOrders.Clear();
-
-        if (allOrders == null)
-            return;
-
-        foreach (var order in allOrders)
-        {
-            if (order != null)
-                _runtimeOrders.Add(order);
-        }
-
-        Shuffle(_runtimeOrders);
-        _currentIndex = -1;
-    }
-
-    private static void Shuffle(List<OrderSO> list)
-    {
-        for (var i = list.Count - 1; i > 0; i--)
-        {
-            var j = Random.Range(0, i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
+        if (allOrders == null) return;
+        foreach (var order in allOrders) if (order != null) _runtimeOrders.Add(order);
     }
 
 #if UNITY_EDITOR
-    public void SetAllOrders(OrderSO[] orders)
-    {
-        allOrders = orders;
-    }
+    public void SetAllOrders(OrderSO[] orders) => allOrders = orders;
 #endif
 }

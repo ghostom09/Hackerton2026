@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -10,9 +11,16 @@ public class Timer : MonoBehaviour
     private float remainingTime;
     private float maxTime;
     private bool isRunning;
+    private bool _expiredRaised;
+
+    public event Action TimeExpired;
+    public event Action<float> TimeReduced;
 
     public int RemainingSeconds => Mathf.CeilToInt(remainingTime);
     public float RemainingNormalized => maxTime <= 0f ? 0f : Mathf.Clamp01(remainingTime / maxTime);
+    public float RemainingTime => remainingTime;
+    public float MaxTime => maxTime;
+    public bool IsRunning => isRunning;
 
     private void Awake()
     {
@@ -34,7 +42,7 @@ public class Timer : MonoBehaviour
         if (remainingTime <= 0f)
         {
             isRunning = false;
-            Debug.Log("[Timer] 게임 끝!");
+            RaiseExpired();
         }
     }
 
@@ -43,6 +51,7 @@ public class Timer : MonoBehaviour
         maxTime = Mathf.Max(0f, seconds);
         remainingTime = maxTime;
         isRunning = maxTime > 0f;
+        _expiredRaised = false;
 
         if (timeSlider != null)
         {
@@ -75,9 +84,17 @@ public class Timer : MonoBehaviour
         if (seconds <= 0f)
             return;
 
+        var previousTime = remainingTime;
         remainingTime = Mathf.Max(0f, remainingTime - seconds);
+        var reducedAmount = previousTime - remainingTime;
+        if (reducedAmount > 0f)
+            TimeReduced?.Invoke(reducedAmount);
+
         if (remainingTime <= 0f)
+        {
             isRunning = false;
+            RaiseExpired();
+        }
 
         UpdateUI();
     }
@@ -89,6 +106,15 @@ public class Timer : MonoBehaviour
 
         if (timeSlider != null)
             timeSlider.value = RemainingNormalized;
+    }
+
+    private void RaiseExpired()
+    {
+        if (_expiredRaised)
+            return;
+
+        _expiredRaised = true;
+        TimeExpired?.Invoke();
     }
 
     private static string FormatTime(int totalSeconds)
