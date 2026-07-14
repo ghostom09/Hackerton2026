@@ -45,6 +45,7 @@ public class HappyEndingController : MonoBehaviour
     [Header("Ending")]
     [SerializeField] private GameObject endingImage;
     [SerializeField] private CanvasGroup whiteFadePanel;
+    [SerializeField] private TMP_Text thankYouText;
 
     [Header("Dialogue")]
     [SerializeField] private DialogueLine[] dialogues;
@@ -55,6 +56,8 @@ public class HappyEndingController : MonoBehaviour
     [SerializeField] private float dialogueFadeDuration = 0.5f;
     [SerializeField] private float endingImageDuration = 3f;
     [SerializeField] private float endingFadeDuration = 2f;
+    [SerializeField] private float endingImageRiseDuration = 1.1f;
+    [SerializeField] private float thankYouDuration = 1.8f;
 
     private readonly Color activeColor = Color.white;
     private readonly Color inactiveColor = new(0.35f, 0.35f, 0.35f, 1f);
@@ -62,6 +65,8 @@ public class HappyEndingController : MonoBehaviour
     private Stage currentStage = Stage.Starting;
     private int dialogueIndex;
     private bool changingStage;
+    private CanvasGroup _thankYouGroup;
+    private Vector2 _endingImagePosition;
     private void Awake()
     {
         Time.timeScale = 1f;
@@ -73,7 +78,13 @@ public class HappyEndingController : MonoBehaviour
         SetCharactersActive(false);
 
         if (endingImage != null)
+        {
+            if (endingImage.transform is RectTransform endingRect)
+                _endingImagePosition = endingRect.anchoredPosition;
             endingImage.SetActive(false);
+        }
+
+        CreateThankYouTextIfNeeded();
     }
 
     private void Start()
@@ -175,9 +186,19 @@ public class HappyEndingController : MonoBehaviour
         SetCharactersActive(false);
 
         if (endingImage != null)
+        {
             endingImage.SetActive(true);
+            yield return RiseEndingImage();
+        }
+
+        // A white flash reveals the ending image after it rises into view.
+        yield return Fade(whiteFadePanel, 0f, 1f, endingFadeDuration * .5f);
+        yield return Fade(whiteFadePanel, 1f, 0f, endingFadeDuration * .5f);
 
         yield return new WaitForSecondsRealtime(endingImageDuration);
+        yield return ShowThankYou();
+
+        // Final white fade before returning to the title screen.
         yield return Fade(whiteFadePanel, 0f, 1f, endingFadeDuration);
 
         currentStage = Stage.Finished;
@@ -194,6 +215,60 @@ public class HappyEndingController : MonoBehaviour
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
         }
+    }
+
+    private IEnumerator RiseEndingImage()
+    {
+        if (endingImage == null || endingImage.transform is not RectTransform imageRect)
+            yield break;
+
+        var startPosition = _endingImagePosition + Vector2.down * 760f;
+        float safeDuration = Mathf.Max(.01f, endingImageRiseDuration);
+        for (float elapsed = 0f; elapsed < safeDuration; elapsed += Time.unscaledDeltaTime)
+        {
+            imageRect.anchoredPosition = Vector2.Lerp(startPosition, _endingImagePosition, elapsed / safeDuration);
+            yield return null;
+        }
+        imageRect.anchoredPosition = _endingImagePosition;
+    }
+
+    private IEnumerator ShowThankYou()
+    {
+        if (_thankYouGroup == null)
+            yield break;
+
+        yield return Fade(_thankYouGroup, 0f, 1f, .45f);
+        yield return new WaitForSecondsRealtime(thankYouDuration);
+        yield return Fade(_thankYouGroup, 1f, 0f, .45f);
+    }
+
+    private void CreateThankYouTextIfNeeded()
+    {
+        if (thankYouText == null && whiteFadePanel != null && whiteFadePanel.transform.parent != null)
+        {
+            var textObject = new GameObject("ThankYouText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI), typeof(CanvasGroup));
+            textObject.transform.SetParent(whiteFadePanel.transform.parent, false);
+            thankYouText = textObject.GetComponent<TextMeshProUGUI>();
+            var rect = thankYouText.rectTransform;
+            rect.anchorMin = new Vector2(.2f, .42f);
+            rect.anchorMax = new Vector2(.8f, .58f);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            thankYouText.font = TMP_Settings.defaultFontAsset;
+            thankYouText.text = "\uACE0\uB9C8\uC6CC";
+            thankYouText.fontSize = 72f;
+            thankYouText.alignment = TextAlignmentOptions.Center;
+            thankYouText.color = Color.white;
+            _thankYouGroup = textObject.GetComponent<CanvasGroup>();
+        }
+        else if (thankYouText != null)
+        {
+            _thankYouGroup = thankYouText.GetComponent<CanvasGroup>();
+            if (_thankYouGroup == null)
+                _thankYouGroup = thankYouText.gameObject.AddComponent<CanvasGroup>();
+        }
+
+        if (_thankYouGroup != null)
+            SetCanvasGroup(_thankYouGroup, false, 0f);
     }
 
     private static IEnumerator Fade(
