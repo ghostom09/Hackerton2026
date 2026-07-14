@@ -64,7 +64,8 @@ MonoBehaviour:
   moveSpeed: 4.5
   carSpeed: 5.5
   spawnInterval: 0.85
-  laneYRange: {x: -1.6, y: 1.8}
+  upperLaneYs: {x: 0.55, y: 1.5}
+  lowerLaneYs: {x: -0.55, y: -1.5}
   goalReachDistance: 1.2
 --- !u!1 &1040446418506581503
 GameObject:
