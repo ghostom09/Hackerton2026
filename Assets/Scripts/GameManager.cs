@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Vector2 mapSpawnPosition;
     [SerializeField] private TextCore textCore;
     [SerializeField] private Timer timer;
+    [SerializeField] private CountdownUI countdownUI;
     [SerializeField] private Behaviour[] playerGameplayBehaviours;
 
     public int currentMapIndex { get; private set; } = -1;
@@ -24,6 +25,7 @@ public class GameManager : MonoBehaviour
     private GameObject _currentMap;
     private bool _isSwitchingMap;
     private Coroutine _nextMapRoutine;
+    private int _timerEmotionStage = -1;
 
     public OrderSO NowMap { get; private set; }
     public int Time => Mathf.CeilToInt(currentMapTime);
@@ -36,6 +38,10 @@ public class GameManager : MonoBehaviour
         Instance = this;
         textCore ??= FindFirstObjectByType<TextCore>();
         timer ??= FindFirstObjectByType<Timer>();
+        countdownUI ??= FindFirstObjectByType<CountdownUI>();
+        if (countdownUI == null)
+            countdownUI = gameObject.AddComponent<CountdownUI>();
+
         if (timer != null)
             timer.TimeReduced += HandleTimerReduced;
 
@@ -43,7 +49,7 @@ public class GameManager : MonoBehaviour
         totalMapCount = _runtimeOrders.Count;
     }
 
-    private void Start() => LoadNextMap();
+    private void Start() => StartCoroutine(StartGameAfterCountdown());
 
     private void Update()
     {
@@ -65,14 +71,22 @@ public class GameManager : MonoBehaviour
         if (isGameStopped) return;
         currentMapMaxTime = Mathf.Max(0f, mapTime);
         currentMapTime = currentMapMaxTime;
+        _timerEmotionStage = -1;
         timer?.BeginOrder(currentMapMaxTime);
+        UpdateTimerEmotionByRemaining(true);
     }
 
     public void UpdateMapTimer()
     {
-        if (isGameStopped || currentMapMaxTime <= 0f) return;
+        if (isGameStopped || _isSwitchingMap || currentMapMaxTime <= 0f) return;
         currentMapTime = timer != null ? timer.RemainingTime : Mathf.Max(0f, currentMapTime - UnityEngine.Time.deltaTime);
-        if (currentMapTime <= 0f) StopRun();
+        if (currentMapTime <= 0f)
+        {
+            StopRun();
+            return;
+        }
+
+        UpdateTimerEmotionByRemaining(false);
     }
 
     public void CompleteCurrentMap()
@@ -130,6 +144,14 @@ public class GameManager : MonoBehaviour
 
     public OrderSO GiveData() => NowMap;
 
+    private IEnumerator StartGameAfterCountdown()
+    {
+        if (countdownUI != null)
+            yield return countdownUI.Play();
+
+        LoadNextMap();
+    }
+
     private void LoadNextMap()
     {
         if (isGameStopped) return;
@@ -167,6 +189,29 @@ public class GameManager : MonoBehaviour
             return;
 
         UIManager.Instance?.ShowSadForTimerReduced();
+    }
+
+    private void UpdateTimerEmotionByRemaining(bool force)
+    {
+        if (UIManager.Instance == null || currentMapMaxTime <= 0f)
+            return;
+
+        var elapsedNormalized = Mathf.Clamp01(1f - (currentMapTime / currentMapMaxTime));
+        var nextStage = elapsedNormalized < 1f / 3f ? 0 : elapsedNormalized < 2f / 3f ? 1 : 2;
+
+        if (!force && nextStage == _timerEmotionStage)
+            return;
+
+        _timerEmotionStage = nextStage;
+
+        var emotion = nextStage switch
+        {
+            0 => charEmotion.normal,
+            1 => charEmotion.sad,
+            _ => charEmotion.mad,
+        };
+
+        UIManager.Instance.ShowEmotion(emotion);
     }
 
     private void BuildRuntimeOrders()
