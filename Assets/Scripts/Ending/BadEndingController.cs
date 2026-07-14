@@ -7,6 +7,15 @@ using UIButton = UnityEngine.UI.Button;
 
 public class BadEndingController : MonoBehaviour
 {
+    private const int ChatMessageCountBeforeImage = 20;
+    private const int LastImageSequenceMessage = 22;
+
+    private enum DialogueStage
+    {
+        Chat,
+        ImageSequence
+    }
+
     [Header("Replaceable Art")]
     [SerializeField] private Sprite roomBackgroundSprite;
     [SerializeField] private Sprite phoneSprite;
@@ -15,7 +24,10 @@ public class BadEndingController : MonoBehaviour
     [Header("Timing")]
     [SerializeField] private float openingFadeDuration = 2f;
     [SerializeField] private float ringDelay = 2f;
-    [SerializeField] private float glitchDuration = .5f;
+    [SerializeField] private float firstMessageDelay = .7f;
+    [SerializeField] private float imageSequenceGlitchDuration = .3f;
+    [SerializeField] private float imageSequenceLineDuration = 1.5f;
+    [SerializeField] private float endingFadeDuration = .5f;
     [SerializeField, Min(1f)] private float messageScrollSensitivity = 120f;
 
     [Header("Messages")]
@@ -38,12 +50,21 @@ public class BadEndingController : MonoBehaviour
     [SerializeField] private Image fadePanel;
     [SerializeField] private Image glitchPanel;
 
+    [Header("Image Sequence UI")]
+    [SerializeField] private GameObject imageSequencePanel;
+    [SerializeField] private Image storyImage;
+    [SerializeField] private TMP_Text imageSequenceText;
+
     private TMP_FontAsset dialogueFont;
     private RectTransform messageContentRect;
 
     private int messageIndex;
+    private int advanceInputAllowedFrame;
     private bool chatOpened;
     private bool glitchPlaying;
+    private bool imageTransitionReady;
+    private bool firstMessagePending;
+    private DialogueStage dialogueStage;
 
     private void Awake()
     {
@@ -63,7 +84,15 @@ public class BadEndingController : MonoBehaviour
 
     private void Update()
     {
-        if (!chatOpened || glitchPlaying)
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            StopAllCoroutines();
+            glitchPlaying = true;
+            LoadMainMenu();
+            return;
+        }
+
+        if (!chatOpened || glitchPlaying || firstMessagePending)
             return;
 
         HandleMessageScroll();
@@ -74,7 +103,11 @@ public class BadEndingController : MonoBehaviour
         bool mouseClick = Mouse.current != null &&
                           Mouse.current.leftButton.wasPressedThisFrame;
 
-        if (pressSpace || (mouseClick && !IsPointerOverMessage()))
+        if (Time.frameCount < advanceInputAllowedFrame)
+            return;
+
+        // Clicking anywhere on the phone/chat, as well as Space, advances the dialogue.
+        if (pressSpace || mouseClick)
             ShowNextMessage();
     }
 
@@ -87,15 +120,6 @@ public class BadEndingController : MonoBehaviour
         if (!Mathf.Approximately(wheelY, 0f))
             messageScrollRect.verticalNormalizedPosition = Mathf.Clamp01(
                 messageScrollRect.verticalNormalizedPosition + wheelY * .0025f);
-    }
-
-    private bool IsPointerOverMessage()
-    {
-        return messageScrollRect != null && messageScrollRect.viewport != null &&
-               Mouse.current != null && RectTransformUtility.RectangleContainsScreenPoint(
-                   messageScrollRect.viewport,
-                   Mouse.current.position.ReadValue(),
-                   canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null);
     }
 
     private void PrepareCanvas()
@@ -167,6 +191,7 @@ public class BadEndingController : MonoBehaviour
         chatPanel.SetActive(false);
         SetImageVisible(glitchPanel, false, 0f);
         SetImageVisible(fadePanel, true, 1f);
+        EnsureImageSequenceUi();
     }
 
     private void BuildTemporaryUI()
@@ -217,6 +242,8 @@ public class BadEndingController : MonoBehaviour
         chatPanel = CreateChatPanel();
         chatPanel.SetActive(false);
 
+        EnsureImageSequenceUi();
+
         Image glitchImage = CreateImage(
             "GlitchPanel",
             canvas.transform,
@@ -234,6 +261,14 @@ public class BadEndingController : MonoBehaviour
         Stretch(fadeImage.rectTransform);
         fadePanel = fadeImage;
         SetImageVisible(fadePanel, true, 1f);
+    }
+
+    private void EnsureImageSequenceUi()
+    {
+        if (imageSequencePanel == null || imageSequenceText == null)
+            imageSequencePanel = CreateImageSequencePanel();
+
+        imageSequencePanel.SetActive(false);
     }
 
     private GameObject CreateChatPanel()
@@ -313,6 +348,19 @@ public class BadEndingController : MonoBehaviour
         return panelImage.gameObject;
     }
 
+    private GameObject CreateImageSequencePanel()
+    {
+        Image panel = CreateImage("ImageSequencePanel", canvas.transform, null, new Color(.04f, .05f, .07f, 1f));
+        Stretch(panel.rectTransform);
+
+        storyImage = CreateImage("StoryImage", panel.transform, null, new Color(.25f, .28f, .32f, 1f));
+        Stretch(storyImage.rectTransform, new Vector2(.08f, .2f), new Vector2(.52f, .8f));
+
+        imageSequenceText = CreateText("StoryText", panel.transform, string.Empty, 36f, TextAlignmentOptions.MidlineLeft, Color.white, Vector2.zero, Vector2.zero);
+        Stretch(imageSequenceText.rectTransform, new Vector2(.57f, .2f), new Vector2(.92f, .8f));
+        return panel.gameObject;
+    }
+
     private IEnumerator StartBadEnding()
     {
         yield return FadeImage(fadePanel, 1f, 0f, openingFadeDuration);
@@ -351,61 +399,99 @@ public class BadEndingController : MonoBehaviour
         chatPanel.SetActive(true);
         messageText.text = string.Empty;
         messageIndex = 0;
+        StartCoroutine(ShowFirstMessageAfterDelay());
+    }
+
+    private IEnumerator ShowFirstMessageAfterDelay()
+    {
+        firstMessagePending = true;
+        yield return new WaitForSecondsRealtime(firstMessageDelay);
         ShowNextMessage();
+        firstMessagePending = false;
+        advanceInputAllowedFrame = Time.frameCount + 1;
     }
 
     private void ShowNextMessage()
     {
-        if (messageIndex >= messages.Length)
+        // The 20th line remains visible in the chat. The following input starts
+        // the fade transition, so only lines 21 and 22 belong to the image sequence.
+        if (dialogueStage == DialogueStage.Chat && imageTransitionReady)
         {
-            StartCoroutine(PlayGlitch());
+            StartCoroutine(SwitchToImageSequence());
             return;
         }
 
-        if (!string.IsNullOrEmpty(messageText.text))
-            messageText.text += "\n\n";
+        if (messageIndex >= messages.Length)
+            return;
 
-        messageText.text +=
-            $"<b>{senderName}</b>\n{messages[messageIndex]}";
-        messageIndex++;
-        ResizeMessageContent();
+        if (dialogueStage == DialogueStage.Chat)
+        {
+            if (!string.IsNullOrEmpty(messageText.text))
+                messageText.text += "\n\n";
+
+            messageText.text += $"<b>{senderName}</b>\n{messages[messageIndex++]}";
+            ResizeMessageContent();
+
+            if (messageIndex == ChatMessageCountBeforeImage)
+                imageTransitionReady = true;
+        }
     }
 
-    private IEnumerator PlayGlitch()
+    private IEnumerator SwitchToImageSequence()
     {
         if (glitchPlaying)
             yield break;
 
         glitchPlaying = true;
+        imageTransitionReady = false;
+        yield return PlayGlitchVisual(imageSequenceGlitchDuration);
         chatPanel.SetActive(false);
+        imageSequencePanel.SetActive(true);
+        imageSequenceText.text = string.Empty;
+        dialogueStage = DialogueStage.ImageSequence;
+        yield return PlayImageSequenceCutscene();
+    }
+
+    private IEnumerator PlayGlitchVisual(float duration)
+    {
+        if (glitchPanel == null)
+            yield break;
+
         SetImageVisible(glitchPanel, true, 1f);
-
         RectTransform glitchRect = glitchPanel.rectTransform;
-        float elapsedTime = 0f;
+        Vector2 basePosition = glitchRect.anchoredPosition;
+        float safeDuration = Mathf.Max(.01f, duration);
 
-        while (elapsedTime < glitchDuration)
+        for (float elapsed = 0f; elapsed < safeDuration; elapsed += Time.unscaledDeltaTime)
         {
-            elapsedTime += Time.unscaledDeltaTime;
-            Color glitchColor = glitchPanel.color;
-            glitchColor.a = Random.Range(0.25f, 1f);
-            glitchPanel.color = glitchColor;
-
+            Color color = glitchPanel.color;
+            color.a = UnityEngine.Random.Range(.25f, 1f);
+            glitchPanel.color = color;
             if (glitchSprite == null)
             {
-                float value = Random.value > 0.35f ? 0f : 1f;
-                glitchPanel.color = new Color(value, value, value, glitchColor.a);
+                float value = UnityEngine.Random.value > .35f ? 0f : 1f;
+                glitchPanel.color = new Color(value, value, value, color.a);
             }
-
-            glitchRect.anchoredPosition = new Vector2(
-                Random.Range(-30f, 30f),
-                Random.Range(-18f, 18f));
-
-            yield return new WaitForSecondsRealtime(0.04f);
+            glitchRect.anchoredPosition = basePosition + new Vector2(
+                UnityEngine.Random.Range(-30f, 30f),
+                UnityEngine.Random.Range(-18f, 18f));
+            yield return new WaitForSecondsRealtime(.04f);
         }
 
+        glitchRect.anchoredPosition = basePosition;
         SetImageVisible(glitchPanel, false, 0f);
-        SetImageVisible(fadePanel, true, 1f);
-        yield return new WaitForSecondsRealtime(1f);
+    }
+
+    private IEnumerator PlayImageSequenceCutscene()
+    {
+        int lastImageMessageIndex = Mathf.Min(LastImageSequenceMessage, messages.Length);
+        while (messageIndex < lastImageMessageIndex)
+        {
+            imageSequenceText.text = messages[messageIndex++];
+            yield return new WaitForSecondsRealtime(imageSequenceLineDuration);
+        }
+
+        yield return FadeImage(fadePanel, 0f, 1f, endingFadeDuration);
         LoadMainMenu();
     }
 
@@ -543,7 +629,7 @@ public class BadEndingController : MonoBehaviour
         RectTransform viewport = messageScrollRect.viewport;
         viewport.anchorMin = Vector2.zero;
         viewport.anchorMax = Vector2.one;
-        viewport.offsetMin = new Vector2(16f, 16f);
+        viewport.offsetMin = new Vector2(16f, 65f);
         // Keep the sender title area free at the top of the chat panel.
         viewport.offsetMax = new Vector2(-16f, -100f);
     }
@@ -584,6 +670,14 @@ public class BadEndingController : MonoBehaviour
     {
         rect.anchorMin = Vector2.zero;
         rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+    }
+
+    private static void Stretch(RectTransform rect, Vector2 min, Vector2 max)
+    {
+        rect.anchorMin = min;
+        rect.anchorMax = max;
         rect.offsetMin = Vector2.zero;
         rect.offsetMax = Vector2.zero;
     }
