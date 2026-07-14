@@ -219,6 +219,12 @@ public class GameManager : MonoBehaviour
         _runtimeOrders.Clear();
         if (allOrders == null) return;
         foreach (var order in allOrders) if (order != null) _runtimeOrders.Add(order);
+
+        for (var i = _runtimeOrders.Count - 1; i > 0; i--)
+        {
+            var randomIndex = Random.Range(0, i + 1);
+            (_runtimeOrders[i], _runtimeOrders[randomIndex]) = (_runtimeOrders[randomIndex], _runtimeOrders[i]);
+        }
     }
 
 #if UNITY_EDITOR
