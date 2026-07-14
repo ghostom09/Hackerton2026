@@ -6,6 +6,7 @@ public class BugMovement : MonoBehaviour
     [SerializeField] private float moveSpeed = 2f;
     [SerializeField] private float minChangeInterval = 1f;
     [SerializeField] private float maxChangeInterval = 3f;
+    [SerializeField] private float rotationSpeed = 720f;
     [SerializeField] private Camera targetCamera;
 
     private Rigidbody2D _rb;
@@ -31,7 +32,9 @@ public class BugMovement : MonoBehaviour
     {
         if (Time.time < _knockbackEndTime)
         {
-            _rb.linearVelocity = ConstrainVelocityToCamera(_knockbackVelocity);
+            var knockbackVelocity = ConstrainVelocityToCamera(_knockbackVelocity);
+            _rb.linearVelocity = knockbackVelocity;
+            RotateTowardVelocity(knockbackVelocity);
             return;
         }
 
@@ -50,6 +53,7 @@ public class BugMovement : MonoBehaviour
             ReverseDirection();
 
         _rb.linearVelocity = constrainedVelocity;
+        RotateTowardVelocity(constrainedVelocity);
     }
 
     public void ApplyKnockback(Vector2 velocity, float duration)
@@ -95,5 +99,15 @@ public class BugMovement : MonoBehaviour
         var angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
         _moveDirection = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
         _nextDirectionTime = Time.time + Random.Range(minChangeInterval, maxChangeInterval);
+    }
+
+    private void RotateTowardVelocity(Vector2 velocity)
+    {
+        if (velocity.sqrMagnitude < 0.0001f)
+            return;
+
+        var targetAngle = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg - 90f;
+        var nextAngle = Mathf.MoveTowardsAngle(_rb.rotation, targetAngle, rotationSpeed * Time.fixedDeltaTime);
+        _rb.MoveRotation(nextAngle);
     }
 }

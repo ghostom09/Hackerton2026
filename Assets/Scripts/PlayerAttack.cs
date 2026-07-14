@@ -5,6 +5,7 @@ public class PlayerAttack : MonoBehaviour
 {
     [SerializeField] private GameObject attackPrefab;
     [SerializeField] private float attackOffset = 0.6f;
+    [SerializeField] private float attackRotationOffset = 0f;
     [SerializeField] private float cooldown = 0.25f;
     [SerializeField] private Camera targetCamera;
 
@@ -50,7 +51,7 @@ public class PlayerAttack : MonoBehaviour
 
         _nextAttackTime = Time.time + cooldown;
 
-        var angle = Mathf.Atan2(_aimDirection.y, _aimDirection.x) * Mathf.Rad2Deg;
+        var angle = Mathf.Atan2(_aimDirection.y, _aimDirection.x) * Mathf.Rad2Deg + attackRotationOffset;
         var spawnPos = (Vector2)transform.position + _aimDirection * attackOffset;
         var rotation = Quaternion.Euler(0f, 0f, angle);
 
