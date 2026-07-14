@@ -231,7 +231,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.49125668, g: 0.609856, b: 0.79622644, a: 0}
+  m_BackGroundColor: {r: 1, g: 1, b: 1, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -626,8 +626,6 @@ MonoBehaviour:
   dialogueText: {fileID: 1108696804}
   endingImage: {fileID: 170776986}
   whiteFadePanel: {fileID: 1881700963}
-  targetCamera: {fileID: 0}
-  endingCameraBackgroundColor: {r: 1, g: 1, b: 1, a: 1}
   dialogues: []
   openingFadeDuration: 2
   dialogueDelay: 0.5

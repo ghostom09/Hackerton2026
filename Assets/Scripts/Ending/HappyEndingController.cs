@@ -46,10 +46,6 @@ public class HappyEndingController : MonoBehaviour
     [SerializeField] private GameObject endingImage;
     [SerializeField] private CanvasGroup whiteFadePanel;
 
-    [Header("Ending Camera Background")]
-    [SerializeField] private Camera targetCamera;
-    [SerializeField] private Color endingCameraBackgroundColor = Color.white;
-
     [Header("Dialogue")]
     [SerializeField] private DialogueLine[] dialogues;
 
@@ -66,16 +62,11 @@ public class HappyEndingController : MonoBehaviour
     private Stage currentStage = Stage.Starting;
     private int dialogueIndex;
     private bool changingStage;
-    private CameraClearFlags originalCameraClearFlags;
-    private Color originalCameraBackgroundColor;
-    private bool cameraStateSaved;
-
     private void Awake()
     {
         Time.timeScale = 1f;
 
         EnsureDefaultDialogues();
-        SaveCameraState();
 
         SetCanvasGroup(dialoguePanel, false, 0f);
         SetCanvasGroup(whiteFadePanel, true, 1f);
@@ -182,7 +173,6 @@ public class HappyEndingController : MonoBehaviour
 
         SetCanvasGroup(dialoguePanel, false, 0f);
         SetCharactersActive(false);
-        SetEndingCameraBackground();
 
         if (endingImage != null)
             endingImage.SetActive(true);
@@ -252,42 +242,6 @@ public class HappyEndingController : MonoBehaviour
 
         if (rightCharacter != null)
             rightCharacter.color = rightColor;
-    }
-
-    private void SaveCameraState()
-    {
-        if (targetCamera == null)
-            targetCamera = Camera.main;
-
-        if (targetCamera == null)
-            return;
-
-        originalCameraClearFlags = targetCamera.clearFlags;
-        originalCameraBackgroundColor = targetCamera.backgroundColor;
-        cameraStateSaved = true;
-    }
-
-    private void SetEndingCameraBackground()
-    {
-        if (targetCamera == null)
-            return;
-
-        targetCamera.clearFlags = CameraClearFlags.SolidColor;
-        targetCamera.backgroundColor = endingCameraBackgroundColor;
-    }
-
-    private void RestoreCameraState()
-    {
-        if (!cameraStateSaved || targetCamera == null)
-            return;
-
-        targetCamera.clearFlags = originalCameraClearFlags;
-        targetCamera.backgroundColor = originalCameraBackgroundColor;
-    }
-
-    private void OnDestroy()
-    {
-        RestoreCameraState();
     }
 
     private void EnsureDefaultDialogues()
