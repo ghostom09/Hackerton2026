@@ -158,7 +158,7 @@ MonoBehaviour:
   telegraphPrefab: {fileID: 5224473388185022346, guid: 4f05612700f61654e98915747d5fc706, type: 3}
   fallingCoverPrefab: {fileID: 8427341841051026493, guid: e75b863660eb6144d97645691ae64500, type: 3}
   telegraphDuration: 1
-  spawnInterval: 0.05
+  spawnInterval: 0.18
   spawnIntervalVariance: 0.25
   dropHeight: 8
   coverFallSpeed: 12

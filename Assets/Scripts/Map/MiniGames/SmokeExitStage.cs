@@ -9,6 +9,12 @@ public class SmokeExitStage : MonoBehaviour
     [SerializeField] private Transform[] hazards;
     [SerializeField] private Vector2 roomClamp = new(5.8f, 3.4f);
 
+    [Header("Hazard Spawn Area")]
+    [Tooltip("가스 생성 범위의 중심 위치입니다.")]
+    [SerializeField] private Vector2 hazardSpawnCenter = Vector2.zero;
+    [Tooltip("중심에서 각 축으로 퍼지는 생성 범위입니다.")]
+    [SerializeField] private Vector2 hazardSpawnRange = new(4.5f, 3.4f);
+
     [Header("Rules")]
     [SerializeField] private float moveSpeed = 4.2f;
     [SerializeField] private float hazardRadius = 0.7f;
@@ -32,6 +38,8 @@ public class SmokeExitStage : MonoBehaviour
             }
             hazards = list.ToArray();
         }
+
+        RandomizeHazards();
     }
 
     private void Update()
@@ -68,5 +76,36 @@ public class SmokeExitStage : MonoBehaviour
     {
         _complete = true;
         MiniGameClear.RequestNext();
+    }
+
+    private void RandomizeHazards()
+    {
+        if (hazards == null)
+            return;
+
+        var range = new Vector2(
+            Mathf.Max(0f, hazardSpawnRange.x),
+            Mathf.Max(0f, hazardSpawnRange.y));
+
+        foreach (var hazard in hazards)
+        {
+            if (hazard == null)
+                continue;
+
+            var position = hazard.position;
+            position.x = hazardSpawnCenter.x + Random.Range(-range.x, range.x);
+            position.y = hazardSpawnCenter.y + Random.Range(-range.y, range.y);
+            hazard.position = position;
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        var range = new Vector2(
+            Mathf.Max(0f, hazardSpawnRange.x),
+            Mathf.Max(0f, hazardSpawnRange.y));
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(hazardSpawnCenter, range * 2f);
     }
 }

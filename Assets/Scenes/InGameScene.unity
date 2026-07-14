@@ -235,7 +235,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 74cfd10ab9ab4271bdb80b0e0482371f, type: 2}
   - {fileID: 11400000, guid: 3971ecd29f13433b8a11f4015920b00e, type: 2}
   - {fileID: 11400000, guid: d2d16947945e42efb6c348d299e14b4a, type: 2}
-  - {fileID: 11400000, guid: 023ac4fab7b24029abcf2e2a0a898643, type: 2}
   - {fileID: 11400000, guid: 76cfafa6af4c464d99a1fe25a08e6004, type: 2}
   - {fileID: 11400000, guid: 23c76dcceb8744299d0d790224f2c9d6, type: 2}
   - {fileID: 11400000, guid: 0995a57561fa4cc5959606a7ac2e6776, type: 2}
@@ -946,6 +945,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
   charProfile: {fileID: 1504466601}
   completeEmotionDuration: 1
+  expressionFadeDuration: 0.08
+  expressionScale: 1.02
   charImage:
   - emotion: 0
     image: {fileID: -5856553710798604053, guid: 0a4d55e0b0ac2f648bb5455174a6c081, type: 3}

@@ -15,6 +15,18 @@ public class OutletHead : MonoBehaviour, IPointerDown, IPointerUp
     public int Frequency => frequency;
     public bool IsConnected { get; private set; }
 
+    public void SetShape(ConnectionShape shape)
+    {
+        ConnectionShapeSprite.Apply(gameObject, shape);
+    }
+
+    public void ResetOrigin()
+    {
+        _originPosition = transform.position;
+        _z = transform.position.z;
+        UpdateLine();
+    }
+
     private void Awake()
     {
         if (targetCamera == null)

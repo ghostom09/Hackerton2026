@@ -70,7 +70,8 @@ public class BraceDoorStage : MonoBehaviour
         if (braceBar != null)
         {
             var height = Mathf.Abs(_barBaseScale.y) > 0.001f ? _barBaseScale.y : 0.35f;
-            braceBar.localScale = new Vector3(Mathf.Max(0.05f, _brace * braceBarMaxWidth), height, 1f);
+            var gaugeRatio = Mathf.Clamp01(_brace / requiredBrace);
+            braceBar.localScale = new Vector3(Mathf.Max(0.05f, gaugeRatio * braceBarMaxWidth), height, 1f);
             braceBar.localPosition = new Vector3(_barBasePos.x + braceBar.localScale.x * 0.5f, _barBasePos.y, _barBasePos.z);
         }
 

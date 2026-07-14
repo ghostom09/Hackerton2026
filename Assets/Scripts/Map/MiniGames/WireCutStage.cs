@@ -42,26 +42,57 @@ public class WireCutStage : MonoBehaviour
         if (wires == null || wires.Length == 0)
             return;
 
+        // Start each round with a random wire, rather than the prefab's authored IsSafe value.
+        SelectSafeWire(RandomWireIndex());
+    }
+
+    private void SelectNextSafeWire(int incorrectIndex)
+    {
+        // Do not immediately select either the wire that was just clicked or the old answer.
+        var nextIndex = RandomWireIndex(incorrectIndex, _safeIndex);
+        if (nextIndex >= 0)
+            SelectSafeWire(nextIndex);
+    }
+
+    private int RandomWireIndex(params int[] excludedIndices)
+    {
+        var candidates = new System.Collections.Generic.List<int>();
         for (var i = 0; i < wires.Length; i++)
         {
-            if (wires[i] != null && wires[i].IsSafe)
-            {
-                _safeIndex = i;
-                break;
-            }
+            if (wires[i] == null || System.Array.IndexOf(excludedIndices, i) >= 0)
+                continue;
+
+            candidates.Add(i);
         }
 
-        if (_safeIndex < 0)
+        // Small or incomplete wire sets may leave no non-excluded candidate.
+        if (candidates.Count == 0)
         {
-            _safeIndex = Random.Range(0, wires.Length);
             for (var i = 0; i < wires.Length; i++)
             {
                 if (wires[i] != null)
-                    wires[i].IsSafe = i == _safeIndex;
+                    candidates.Add(i);
             }
         }
 
-        if (hintRenderer != null && wires[_safeIndex] != null)
+        return candidates.Count > 0 ? candidates[Random.Range(0, candidates.Count)] : -1;
+    }
+
+    private void SelectSafeWire(int safeIndex)
+    {
+        _safeIndex = safeIndex;
+        for (var i = 0; i < wires.Length; i++)
+        {
+            if (wires[i] != null)
+                wires[i].IsSafe = i == _safeIndex;
+        }
+
+        UpdateHint();
+    }
+
+    private void UpdateHint()
+    {
+        if (hintRenderer != null && _safeIndex >= 0 && wires[_safeIndex] != null)
         {
             var wireRenderer = MiniGameVisuals.FindSprite(wires[_safeIndex]);
             if (wireRenderer != null)
@@ -100,8 +131,7 @@ public class WireCutStage : MonoBehaviour
             else
             {
                 wires[i].transform.localPosition += new Vector3(Random.Range(-0.1f, 0.1f), 0f, 0f);
-                if (hintRenderer != null)
-                    hintRenderer.color = Color.red;
+                SelectNextSafeWire(i);
             }
             return;
         }
