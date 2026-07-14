@@ -138,9 +138,10 @@ MonoBehaviour:
   - {fileID: 2962405639030016597}
   roomClamp: {x: 5.8, y: 3.4}
   hazardSpawnCenter: {x: 0, y: 0}
-  hazardSpawnRange: {x: 4.5, y: 3.4}
+  hazardSpawnRange: {x: 2, y: 4.2}
   moveSpeed: 4.2
   hazardRadius: 0.7
+  hazardSeparation: 1.4
   exitRadius: 0.85
 --- !u!1 &798761910297174447
 GameObject:
