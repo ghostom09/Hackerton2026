@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -14,13 +15,18 @@ public class MagazineGrabChecker : MonoBehaviour
     [SerializeField] private TrashBinDropZone trashBin;
     [SerializeField] private Camera targetCamera;
     [SerializeField] private bool createDefaultObjects = true;
+    [Min(1)] [SerializeField] private int magazineCount = 3;
+    [SerializeField] private Vector2 additionalMagazineOffset = new Vector2(2.6f, 0f);
 
     [Header("Mission Event")]
     [SerializeField] private UnityEvent onMagazineDiscarded;
 
     private Vector3 dragOffset;
+    private readonly List<MagazineItem> magazines = new();
+    private MagazineItem draggedMagazine;
     private bool isDragging;
     private bool isComplete;
+    private int discardedMagazineCount;
 
     private void Awake()
     {
@@ -31,23 +37,24 @@ public class MagazineGrabChecker : MonoBehaviour
             CreateDefaultObjects();
         }
 
-        if (magazine != null)
-        {
-            magazine.Discarded += NotifyMagazineDiscarded;
-        }
+        CreateMagazineCollection();
+
+        foreach (MagazineItem magazineItem in magazines)
+            magazineItem.Discarded += NotifyMagazineDiscarded;
     }
 
     private void OnDestroy()
     {
-        if (magazine != null)
+        foreach (MagazineItem magazineItem in magazines)
         {
-            magazine.Discarded -= NotifyMagazineDiscarded;
+            if (magazineItem != null)
+                magazineItem.Discarded -= NotifyMagazineDiscarded;
         }
     }
 
     private void Update()
     {
-        if (isComplete || Mouse.current == null || magazine == null)
+        if (isComplete || Mouse.current == null)
         {
             return;
         }
@@ -61,9 +68,9 @@ public class MagazineGrabChecker : MonoBehaviour
 
         if (isDragging)
         {
-            magazine.transform.position = ScreenToWorld(mousePosition) + dragOffset;
+            draggedMagazine.transform.position = ScreenToWorld(mousePosition) + dragOffset;
 
-            if (trashBin != null && trashBin.TryDiscard(magazine))
+            if (trashBin != null && trashBin.TryDiscard(draggedMagazine))
             {
                 return;
             }
@@ -73,7 +80,7 @@ public class MagazineGrabChecker : MonoBehaviour
         {
             if (isDragging && trashBin != null)
             {
-                trashBin.TryDiscard(magazine);
+                trashBin.TryDiscard(draggedMagazine);
             }
 
             isDragging = false;
@@ -82,13 +89,17 @@ public class MagazineGrabChecker : MonoBehaviour
 
     private void TryStartDragging(Vector2 mousePosition)
     {
-        if (!magazine.Contains(ScreenToWorld(mousePosition)))
+        Vector3 worldPosition = ScreenToWorld(mousePosition);
+        foreach (MagazineItem magazineItem in magazines)
         {
+            if (magazineItem == null || !magazineItem.Contains(worldPosition))
+                continue;
+
+            draggedMagazine = magazineItem;
+            isDragging = true;
+            dragOffset = draggedMagazine.transform.position - worldPosition;
             return;
         }
-
-        isDragging = true;
-        dragOffset = magazine.transform.position - ScreenToWorld(mousePosition);
     }
 
     private Vector3 ScreenToWorld(Vector2 screenPosition)
@@ -99,10 +110,28 @@ public class MagazineGrabChecker : MonoBehaviour
             return Vector3.zero;
         }
 
-        float depth = Mathf.Abs(magazine.transform.position.z - targetCamera.transform.position.z);
+        MagazineItem referenceMagazine = GetReferenceMagazine();
+        if (referenceMagazine == null)
+            return Vector3.zero;
+
+        float depth = Mathf.Abs(referenceMagazine.transform.position.z - targetCamera.transform.position.z);
         Vector3 worldPosition = targetCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, depth));
-        worldPosition.z = magazine.transform.position.z;
+        worldPosition.z = referenceMagazine.transform.position.z;
         return worldPosition;
+    }
+
+    private MagazineItem GetReferenceMagazine()
+    {
+        if (draggedMagazine != null)
+            return draggedMagazine;
+
+        foreach (MagazineItem magazineItem in magazines)
+        {
+            if (magazineItem != null)
+                return magazineItem;
+        }
+
+        return magazine;
     }
 
     private void FindCamera()
@@ -120,14 +149,32 @@ public class MagazineGrabChecker : MonoBehaviour
 
     private void NotifyMagazineDiscarded()
     {
-        isComplete = true;
         isDragging = false;
+        draggedMagazine = null;
+        discardedMagazineCount++;
+
+        if (discardedMagazineCount < magazines.Count)
+            return;
+
+        isComplete = true;
         onMagazineDiscarded?.Invoke();
 
         if (GameManager.Instance != null)
-        {
-            Debug.Log("clear");
             GameManager.Instance.NextMap();
+    }
+
+    private void CreateMagazineCollection()
+    {
+        if (magazine == null)
+            return;
+
+        magazines.Add(magazine);
+        for (int i = 1; i < magazineCount; i++)
+        {
+            MagazineItem extraMagazine = Instantiate(magazine, magazine.transform.parent);
+            extraMagazine.name = $"{magazine.name} {i + 1}";
+            extraMagazine.transform.position = magazine.transform.position + (Vector3)(additionalMagazineOffset * i);
+            magazines.Add(extraMagazine);
         }
     }
 

@@ -5,6 +5,8 @@ using TMPro;
 [DisallowMultipleComponent]
 public class ElevatorPickStage : MonoBehaviour
 {
+    private const float WrongElevatorTimePenaltyFraction = 1f / 3f;
+
     [Header("Refs")]
     [SerializeField] private Camera targetCamera;
     [SerializeField] private MiniGameTarget[] elevators;
@@ -106,6 +108,7 @@ public class ElevatorPickStage : MonoBehaviour
             else
             {
                 elevators[i].transform.localPosition += new Vector3(Random.Range(-0.12f, 0.12f), 0f, 0f);
+                GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(WrongElevatorTimePenaltyFraction);
             }
             return;
         }

@@ -8,6 +8,8 @@ using UnityEngine.InputSystem;
 [DisallowMultipleComponent]
 public class LeakSlingStage : MonoBehaviour
 {
+    private const float FloodOverflowTimePenaltyFraction = 0.2f;
+
     [Header("Refs")]
     [SerializeField] private Camera targetCamera;
     [SerializeField] private Transform slingAnchor;
@@ -52,6 +54,9 @@ public class LeakSlingStage : MonoBehaviour
     private Vector3 _floodBasePos;
     private Vector3 _floodBaseScale;
     private Vector3 _bandBaseScale;
+    private Vector3 _bandBaseLocalPosition;
+    private Quaternion _bandBaseLocalRotation;
+    private Vector3 _pullMarkerBaseLocalPosition;
     private Sprite _trajectorySprite;
 
     private struct LeakBlob
@@ -89,14 +94,22 @@ public class LeakSlingStage : MonoBehaviour
         }
 
         if (bandVisual != null)
+        {
             _bandBaseScale = bandVisual.localScale;
+            _bandBaseLocalPosition = bandVisual.localPosition;
+            _bandBaseLocalRotation = bandVisual.localRotation;
 
-        CreateTrajectoryPreview();
+            // Keep the resting band visible as soon as this stage opens.
+            bandVisual.gameObject.SetActive(true);
+        }
 
         if (pullMarker != null)
-            pullMarker.gameObject.SetActive(false);
-        if (bandVisual != null)
-            bandVisual.gameObject.SetActive(false);
+        {
+            _pullMarkerBaseLocalPosition = pullMarker.localPosition;
+            pullMarker.gameObject.SetActive(true);
+        }
+
+        CreateTrajectoryPreview();
 
         _spawnTimer = 0.35f;
     }
@@ -148,10 +161,8 @@ public class LeakSlingStage : MonoBehaviour
                 maxPull);
             Launch(-pull);
             _dragging = false;
-            if (pullMarker != null)
-                pullMarker.gameObject.SetActive(false);
-            if (bandVisual != null)
-                bandVisual.gameObject.SetActive(false);
+            ResetPullMarker();
+            ResetBand();
             SetTrajectoryVisible(false);
         }
     }
@@ -210,8 +221,36 @@ public class LeakSlingStage : MonoBehaviour
         var len = pull.magnitude;
         bandVisual.position = mid;
         bandVisual.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(pull.y, pull.x) * Mathf.Rad2Deg);
-        var thickness = Mathf.Abs(_bandBaseScale.y) > 0.001f ? _bandBaseScale.y : 0.12f;
-        bandVisual.localScale = new Vector3(Mathf.Max(0.05f, len), thickness, 1f);
+
+        // The RubberBand sprite is horizontal, so only its local X axis grows.
+        // Rotation merely points that horizontal strip from the sling to the pull marker.
+        var baseWidth = Mathf.Max(0.05f, Mathf.Abs(_bandBaseScale.x));
+        var horizontalLength = Mathf.Max(baseWidth, len);
+        var xDirection = _bandBaseScale.x < 0f ? -1f : 1f;
+        bandVisual.localScale = new Vector3(
+            xDirection * horizontalLength,
+            _bandBaseScale.y,
+            _bandBaseScale.z);
+    }
+
+    private void ResetBand()
+    {
+        if (bandVisual == null)
+            return;
+
+        bandVisual.localPosition = _bandBaseLocalPosition;
+        bandVisual.localRotation = _bandBaseLocalRotation;
+        bandVisual.localScale = _bandBaseScale;
+        bandVisual.gameObject.SetActive(true);
+    }
+
+    private void ResetPullMarker()
+    {
+        if (pullMarker == null)
+            return;
+
+        pullMarker.localPosition = _pullMarkerBaseLocalPosition;
+        pullMarker.gameObject.SetActive(true);
     }
 
     private void Launch(Vector2 direction)
@@ -325,6 +364,7 @@ public class LeakSlingStage : MonoBehaviour
         {
             _seals = Mathf.Max(0, _seals - 1);
             _flood = 0.45f;
+            GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(FloodOverflowTimePenaltyFraction);
         }
     }
 
