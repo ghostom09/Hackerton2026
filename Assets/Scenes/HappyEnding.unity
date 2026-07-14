@@ -506,8 +506,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 064a2517a9eec3a4ca055592e1c09fa7, type: 2}
-  m_sharedMaterial: {fileID: -7916348973526205337, guid: 064a2517a9eec3a4ca055592e1c09fa7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -723,7 +723,7 @@ MonoBehaviour:
   midDialogueImage: {fileID: 0}
   midDialogueImageAfterDialogue: 12
   midDialogueImageFadeDuration: 0.3
-  midDialogueText: {fileID: 0}
+  midDialogueText: {fileID: 1038979958}
   dialogues:
   - speakerName: "\uC720\uB098"
     dialogue: "...\uC654\uAD6C\uB098"
@@ -762,6 +762,33 @@ MonoBehaviour:
   - speakerName: "\uC720\uB098"
     dialogue: "\uB124\uAC00 \uC815\uB9D0 \uC5EC\uAE30 \uC788\uB2E4\uB294 \uAC78 \uD655\uC778\uD558\uACE0
       \uC2F6\uC5B4."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uB530\uB73B\uD558\uB124."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uC774\uC81C\uC57C \uC2E4\uAC10\uC774 \uB098."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uB124\uAC00 \uB098\uB97C \uAD6C\uD558\uB7EC \uC654\uB2E4\uB294 \uAC8C."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uACE0\uB9C8\uC6CC."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uB098\uB97C \uC78A\uC9C0 \uC54A\uC544\uC918\uC11C."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uADF8\uB9AC\uACE0 \uB05D\uAE4C\uC9C0 \uBB34\uC0AC\uD788 \uC640\uC918\uC11C."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uC774\uC81C \uAC19\uC774 \uB098\uAC00\uC790."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uC774\uBC88\uC5D0\uB294 \uB098\uB3C4 \uB124 \uC606\uC5D0\uC11C \uAC78\uC744\uAC8C."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\u2026\u2026\uC870\uAE08\uB9CC \uB354 \uC774\uB7EC\uACE0 \uC788\uB2E4\uAC00."
     speakerSide: 1
   openingFadeDuration: 2
   dialogueDelay: 0.5
@@ -1101,8 +1128,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 064a2517a9eec3a4ca055592e1c09fa7, type: 2}
-  m_sharedMaterial: {fileID: -7916348973526205337, guid: 064a2517a9eec3a4ca055592e1c09fa7, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
