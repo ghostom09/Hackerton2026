@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 234c585b913971b489b6425521f75825
+guid: b7e16f71624f68345bde89f6579eee55
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2166182767771339273
-    second: "ChatGPT Image 2026\uB144 7\uC6D4 14\uC77C \uC624\uC804 10_10_15_0"
+      213: -1408383010489024869
+    second: "ChatGPT Image 2026\uB144 7\uC6D4 14\uC77C \uC624\uC804 11_31_42_0"
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "ChatGPT Image 2026\uB144 7\uC6D4 14\uC77C \uC624\uC804 10_10_15_0"
+      name: "ChatGPT Image 2026\uB144 7\uC6D4 14\uC77C \uC624\uC804 11_31_42_0"
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7f5ba68ef3c20f1e0800000000000000
-      internalID: -2166182767771339273
+      spriteID: b9e3b182d1b647ce0800000000000000
+      internalID: -1408383010489024869
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "ChatGPT Image 2026\uB144 7\uC6D4 14\uC77C \uC624\uC804 10_10_15_0": -2166182767771339273
+      "ChatGPT Image 2026\uB144 7\uC6D4 14\uC77C \uC624\uC804 11_31_42_0": -1408383010489024869
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

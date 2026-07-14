@@ -661,7 +661,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAttack
   attackPrefab: {fileID: 1974790617205866195, guid: ad1af1a123ebdb942a9990e3291b90c1, type: 3}
-  attackOffset: 0.6
+  attackOffset: 0.9
   attackRotationOffset: -90
   cooldown: 0.25
   targetCamera: {fileID: 0}
