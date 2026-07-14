@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
-  m_Name: Order25
+  m_Name: Order4
   m_EditorClassIdentifier: Assembly-CSharp::OrderSO
-  orderDialog: "<type charDelay=0.06><rumble><color r=220 g=180 b=100>\uCE68\uC785\uC744
-    \uB9C9\uACE0 \uBB38\uC744 \uBC84\uD168\uB0B4\uC138\uC694!</color></rumble></type>"
-  roomPrefab: {fileID: 141512720465613488, guid: 34dc77bc5d984ef5a84dc603cb6aa4d3, type: 3}
+  orderDialog: "<type charDelay=0.06><rumble intensity=3 speed=20><jitter intensity=2
+    speed=18><shake intensity=2.5><zoom minScale=0.92 maxScale=1.12 speed=3>\uC9C0\uC9C4\uC774\uC57C!</zoom></shake></jitter></rumble></type>"
+  roomPrefab: {fileID: 1855567258569944363, guid: ec04a3b5619063f48acf4edc9cab4c46, type: 3}
   time: 10
