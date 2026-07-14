@@ -27,32 +27,68 @@ public class PoisonPickStage : MonoBehaviour
             }
             bottles = list.ToArray();
         }
-        EnsureOneSafeBottle();
+        RandomizeSafeBottlePosition();
     }
 
-    private void EnsureOneSafeBottle()
+    private void RandomizeSafeBottlePosition()
     {
         if (_initialized || bottles == null || bottles.Length == 0)
             return;
 
-        var hasSafe = false;
+        var safeIndex = -1;
         for (var i = 0; i < bottles.Length; i++)
         {
             if (bottles[i] != null && bottles[i].IsSafe)
-                hasSafe = true;
+            {
+                safeIndex = i;
+                break;
+            }
         }
 
-        if (!hasSafe)
+        // Keep the authored safe-bottle visuals and move that whole bottle to a
+        // random slot so its appearance and answer state never get out of sync.
+        if (safeIndex < 0)
         {
-            var safe = Random.Range(0, bottles.Length);
             for (var i = 0; i < bottles.Length; i++)
             {
                 if (bottles[i] != null)
-                    bottles[i].IsSafe = i == safe;
+                {
+                    safeIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (safeIndex >= 0)
+        {
+            for (var i = 0; i < bottles.Length; i++)
+            {
+                if (bottles[i] != null)
+                    bottles[i].IsSafe = i == safeIndex;
+            }
+
+            var destinationIndex = RandomBottleIndex(safeIndex);
+            if (destinationIndex >= 0 && destinationIndex != safeIndex)
+            {
+                var safePosition = bottles[safeIndex].transform.localPosition;
+                bottles[safeIndex].transform.localPosition = bottles[destinationIndex].transform.localPosition;
+                bottles[destinationIndex].transform.localPosition = safePosition;
             }
         }
 
         _initialized = true;
+    }
+
+    private int RandomBottleIndex(int excludedIndex)
+    {
+        var candidates = new System.Collections.Generic.List<int>();
+        for (var i = 0; i < bottles.Length; i++)
+        {
+            if (bottles[i] != null && i != excludedIndex)
+                candidates.Add(i);
+        }
+
+        return candidates.Count > 0 ? candidates[Random.Range(0, candidates.Count)] : excludedIndex;
     }
 
     private void Update()

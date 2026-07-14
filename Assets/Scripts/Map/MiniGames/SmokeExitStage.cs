@@ -13,11 +13,13 @@ public class SmokeExitStage : MonoBehaviour
     [Tooltip("가스 생성 범위의 중심 위치입니다.")]
     [SerializeField] private Vector2 hazardSpawnCenter = Vector2.zero;
     [Tooltip("중심에서 각 축으로 퍼지는 생성 범위입니다.")]
-    [SerializeField] private Vector2 hazardSpawnRange = new(4.5f, 3.4f);
+    [SerializeField] private Vector2 hazardSpawnRange = new(2f, 4.2f);
 
     [Header("Rules")]
     [SerializeField] private float moveSpeed = 4.2f;
     [SerializeField] private float hazardRadius = 0.7f;
+    [Tooltip("가스끼리 겹치지 않도록 유지할 중심 간 최소 거리입니다.")]
+    [SerializeField] private float hazardSeparation = 1.4f;
     [SerializeField] private float exitRadius = 0.85f;
 
     private Vector3 _spawnPos;
@@ -87,16 +89,74 @@ public class SmokeExitStage : MonoBehaviour
             Mathf.Max(0f, hazardSpawnRange.x),
             Mathf.Max(0f, hazardSpawnRange.y));
 
+        var placedPositions = new System.Collections.Generic.List<Vector2>();
+        var minimumDistance = Mathf.Max(0f, hazardSeparation);
+
         foreach (var hazard in hazards)
         {
             if (hazard == null)
                 continue;
 
-            var position = hazard.position;
-            position.x = hazardSpawnCenter.x + Random.Range(-range.x, range.x);
-            position.y = hazardSpawnCenter.y + Random.Range(-range.y, range.y);
+            var position = FindHazardSpawnPosition(range, placedPositions, minimumDistance);
             hazard.position = position;
+            placedPositions.Add(position);
         }
+    }
+
+    private Vector2 FindHazardSpawnPosition(Vector2 range, System.Collections.Generic.List<Vector2> placedPositions, float minimumDistance)
+    {
+        const int maxAttempts = 40;
+        var minimumDistanceSquared = minimumDistance * minimumDistance;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            var candidate = new Vector2(
+                hazardSpawnCenter.x + Random.Range(-range.x, range.x),
+                hazardSpawnCenter.y + Random.Range(-range.y, range.y));
+
+            var overlapsAnotherHazard = false;
+            foreach (var placedPosition in placedPositions)
+            {
+                if ((candidate - placedPosition).sqrMagnitude < minimumDistanceSquared)
+                {
+                    overlapsAnotherHazard = true;
+                    break;
+                }
+            }
+
+            if (!overlapsAnotherHazard)
+                return candidate;
+        }
+
+        // The configured spawn area is too crowded. Keep a valid candidate rather
+        // than placing a gas directly on top of an existing one.
+        return FindMostDistantSpawnPosition(range, placedPositions);
+    }
+
+    private Vector2 FindMostDistantSpawnPosition(Vector2 range, System.Collections.Generic.List<Vector2> placedPositions)
+    {
+        const int candidateCount = 100;
+        var bestPosition = hazardSpawnCenter;
+        var bestDistanceSquared = float.NegativeInfinity;
+
+        for (var i = 0; i < candidateCount; i++)
+        {
+            var candidate = new Vector2(
+                hazardSpawnCenter.x + Random.Range(-range.x, range.x),
+                hazardSpawnCenter.y + Random.Range(-range.y, range.y));
+            var nearestDistanceSquared = float.PositiveInfinity;
+
+            foreach (var placedPosition in placedPositions)
+                nearestDistanceSquared = Mathf.Min(nearestDistanceSquared, (candidate - placedPosition).sqrMagnitude);
+
+            if (nearestDistanceSquared > bestDistanceSquared)
+            {
+                bestDistanceSquared = nearestDistanceSquared;
+                bestPosition = candidate;
+            }
+        }
+
+        return bestPosition;
     }
 
     private void OnDrawGizmosSelected()

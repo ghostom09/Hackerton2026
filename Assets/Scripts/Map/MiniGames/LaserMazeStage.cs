@@ -26,21 +26,6 @@ public class LaserMazeStage : MonoBehaviour
         if (player != null)
             _spawnPos = player.position;
 
-        if (lasers == null || lasers.Length == 0)
-        {
-            var list = new System.Collections.Generic.List<SpriteRenderer>();
-            foreach (Transform child in transform)
-            {
-                if (child.name.StartsWith("Laser"))
-                {
-                    var sr = MiniGameVisuals.FindSprite(child);
-                    if (sr != null)
-                        list.Add(sr);
-                }
-            }
-            lasers = list.ToArray();
-        }
-
         ApplyLaserColors();
     }
 
@@ -70,7 +55,10 @@ public class LaserMazeStage : MonoBehaviour
             {
                 if (lasers[i] == null)
                     continue;
-                if (MiniGameVisuals.ContainsPoint(lasers[i].transform, MiniGameVisuals.HalfFromScale(lasers[i].transform), player.position))
+                // SpriteRenderer.bounds is expressed in world space, so its shape
+                // stays aligned with the rendered beam even when its Laser parent
+                // is rotated vertically.
+                if (lasers[i].bounds.Contains(player.position))
                 {
                     player.position = _spawnPos;
                     break;
@@ -89,8 +77,21 @@ public class LaserMazeStage : MonoBehaviour
         var color = _lasersOn ? laserOnColor : laserOffColor;
         for (var i = 0; i < lasers.Length; i++)
         {
-            if (lasers[i] != null)
-                lasers[i].color = color;
+            var laser = lasers[i];
+            if (laser == null)
+                continue;
+
+            // Lasers holds only the beam renderers for collision.  The sibling
+            // Square is visual-only, so blink it without adding it to this array.
+            laser.color = color;
+            var square = laser.transform.parent != null ? laser.transform.parent.Find("Square") : null;
+            var squareRenderer = square != null ? square.GetComponent<SpriteRenderer>() : null;
+            if (squareRenderer != null)
+            {
+                var squareColor = squareRenderer.color;
+                squareColor.a = color.a;
+                squareRenderer.color = squareColor;
+            }
         }
     }
 
