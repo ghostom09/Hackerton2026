@@ -4,6 +4,9 @@ public enum SceneName
 {
     MainMenu,
     InGame,
+    
+    HappyEnding,
+    BadEnding,
 }
 
 public class SceneManager : MonoBehaviour
