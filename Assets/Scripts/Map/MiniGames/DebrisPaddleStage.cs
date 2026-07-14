@@ -22,6 +22,9 @@ public class DebrisPaddleStage : MonoBehaviour
     [SerializeField] private float paddleY = -3f;
     [SerializeField] private float xClamp = 5.5f;
 
+    [Header("Penalty")]
+    [Range(0f, 1f)] [SerializeField] private float missedDebrisTimePenaltyFraction = 1f / 3f;
+
     private readonly List<Transform> _debris = new();
     private float _spawnTimer;
     private int _catches;
@@ -98,6 +101,7 @@ public class DebrisPaddleStage : MonoBehaviour
                 Destroy(d.gameObject);
                 _debris.RemoveAt(i);
                 _catches = Mathf.Max(0, _catches - 1);
+                GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(missedDebrisTimePenaltyFraction);
             }
         }
     }

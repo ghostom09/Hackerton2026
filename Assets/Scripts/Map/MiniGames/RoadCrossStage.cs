@@ -22,6 +22,7 @@ public class RoadCrossStage : MonoBehaviour
     [SerializeField] private float goalReachDistance = 1.2f;
 
     private readonly List<Transform> _cars = new();
+    private readonly Dictionary<Transform, float> _carDirections = new();
     private Vector3 _spawnPos;
     private float _spawnTimer;
     private bool _complete;
@@ -58,22 +59,32 @@ public class RoadCrossStage : MonoBehaviour
             var car = _cars[i];
             if (car == null)
             {
+                _carDirections.Remove(car);
                 _cars.RemoveAt(i);
                 continue;
             }
 
-            var dir = Mathf.Sign(car.localScale.x);
+            // Keep the movement direction independent of the sprite's visual flip.
+            // Negative scale changes the car image, but should not decide its movement.
+            var dir = _carDirections.TryGetValue(car, out var storedDirection)
+                ? storedDirection
+                : 1f;
             car.position += Vector3.right * (dir * carSpeed * Time.deltaTime);
 
             if (Mathf.Abs(car.position.x) > 8f)
             {
+                _carDirections.Remove(car);
                 Destroy(car.gameObject);
                 _cars.RemoveAt(i);
                 continue;
             }
 
             if (Vector2.Distance(car.position, player.position) < 0.85f)
+            {
                 player.position = _spawnPos;
+                GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(1f / 3f);
+                break;
+            }
         }
 
         if (goal != null && Vector2.Distance(player.position, goal.position) <= goalReachDistance)
@@ -93,10 +104,16 @@ public class RoadCrossStage : MonoBehaviour
         var x = fromLeft ? -7f : 7f;
         var go = Instantiate(carPrefab, new Vector3(x, laneY, 0f), Quaternion.identity, spawnParent);
         var scale = go.transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * (fromLeft ? 1f : -1f);
+        scale.x = Mathf.Abs(scale.x);
         go.transform.localScale = scale;
+
+        var spriteRenderer = go.GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+            spriteRenderer.flipX = !fromLeft;
+
         go.SetActive(true);
         _cars.Add(go.transform);
+        _carDirections.Add(go.transform, fromLeft ? 1f : -1f);
     }
 
     private static float RandomLane(Vector2 lanes)

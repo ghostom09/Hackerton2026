@@ -94,7 +94,7 @@ public class StunShootStage : MonoBehaviour
         _spawnTimer = spawnInterval;
         var ang = Random.Range(0f, Mathf.PI * 2f);
         var pos = new Vector3(Mathf.Cos(ang), Mathf.Sin(ang), 0f) * arenaRadius;
-        var go = Spawn(enemyPrefab, pos, "Enemy", new Color(0.9f, 0.25f, 0.3f), 0.7f);
+        var go = Spawn(enemyPrefab, pos, "Enemy", new Color(0.9f, 0.25f, 0.3f), 0.7f, true);
         _enemies.Add(go.transform);
     }
 
@@ -169,6 +169,9 @@ public class StunShootStage : MonoBehaviour
 
             if (Vector2.Distance(e.position, player.position) < dangerRadius)
             {
+                // An enemy that reaches the player costs one third of the
+                // time still available for the current map.
+                GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(1f / 3f);
                 Destroy(e.gameObject);
                 _enemies.RemoveAt(i);
                 _stuns = Mathf.Max(0, _stuns - 1);
@@ -176,13 +179,14 @@ public class StunShootStage : MonoBehaviour
         }
     }
 
-    private GameObject Spawn(GameObject prefab, Vector3 pos, string name, Color color, float scale)
+    private GameObject Spawn(GameObject prefab, Vector3 pos, string name, Color color, float scale, bool usePrefabScale = false)
     {
         GameObject go;
         if (prefab != null)
         {
             go = Instantiate(prefab, pos, Quaternion.identity, spawnParent);
-            go.transform.localScale = Vector3.one * scale;
+            if (!usePrefabScale)
+                go.transform.localScale = Vector3.one * scale;
         }
         else
         {

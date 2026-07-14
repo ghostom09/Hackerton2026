@@ -151,6 +151,7 @@ public static class RebuildMiniGameObjectPrefabs
     private class Spawnables
     {
         public GameObject Cell;
+        public GameObject Box;
         public GameObject FallingRock;
         public GameObject Meteor;
         public GameObject Flash;
@@ -174,6 +175,7 @@ public static class RebuildMiniGameObjectPrefabs
         return new Spawnables
         {
             Cell = SaveSpawnable("Cell", RectScaled(null, "Cell", Vector2.zero, Vector2.one, new Color(0.75f, 0.75f, 0.78f), 2)),
+            Box = AssetDatabase.LoadAssetAtPath<GameObject>($"{SpawnableRoot}/Box.prefab"),
             // Keep CatchGlass debris as an editable, stage-specific prefab.  The SpriteRenderer
             // is on the root because DebrisPaddleStage randomizes the root scale at runtime.
             FallingRock = SaveSpawnable("FallingRock", SpriteScaled(null, "FallingRock", Vector2.zero, Vector2.one, RockSpritePath, Color.white, 2)),
@@ -401,6 +403,7 @@ public static class RebuildMiniGameObjectPrefabs
         {
             Bind(so, "boardRoot", board.transform);
             Bind(so, "cellPrefab", s.Cell);
+            Bind(so, "boxPrefab", s.Box);
             Bind(so, "bg", GetSprite(bg));
         });
     }

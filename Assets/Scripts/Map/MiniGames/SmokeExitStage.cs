@@ -7,17 +7,19 @@ public class SmokeExitStage : MonoBehaviour
     [SerializeField] private Transform player;
     [SerializeField] private Transform exitPoint;
     [SerializeField] private Transform[] hazards;
-    [SerializeField] private Vector2 roomClamp = new(5.8f, 3.4f);
+    [SerializeField] private Vector2 roomClamp = new Vector2(5.8f, 3.4f);
 
     [Header("Hazard Spawn Area")]
     [Tooltip("가스 생성 범위의 중심 위치입니다.")]
     [SerializeField] private Vector2 hazardSpawnCenter = Vector2.zero;
     [Tooltip("중심에서 각 축으로 퍼지는 생성 범위입니다.")]
-    [SerializeField] private Vector2 hazardSpawnRange = new(2f, 4.2f);
+    [SerializeField] private Vector2 hazardSpawnRange = new Vector2(2f, 4.2f);
 
     [Header("Rules")]
     [SerializeField] private float moveSpeed = 4.2f;
     [SerializeField] private float hazardRadius = 0.7f;
+    [Tooltip("Fire에 닿아 시작 위치로 돌아갈 때 차감할 제한 시간(초)입니다.")]
+    [SerializeField, Min(0f)] private float fireTimePenalty = 1f;
     [Tooltip("가스끼리 겹치지 않도록 유지할 중심 간 최소 거리입니다.")]
     [SerializeField] private float hazardSeparation = 1.4f;
     [SerializeField] private float exitRadius = 0.85f;
@@ -65,6 +67,7 @@ public class SmokeExitStage : MonoBehaviour
                 if (Vector2.Distance(hazards[i].position, player.position) < hazardRadius)
                 {
                     player.position = _spawnPos;
+                    GameManager.Instance?.ReduceCurrentMapTime(fireTimePenalty);
                     break;
                 }
             }

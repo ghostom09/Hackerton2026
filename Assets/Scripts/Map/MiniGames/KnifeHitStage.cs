@@ -8,6 +8,8 @@ using UnityEngine.InputSystem;
 [DisallowMultipleComponent]
 public class KnifeHitStage : MonoBehaviour
 {
+    private const float BounceTimePenaltyFraction = 1f / 3f;
+
     [Header("Refs")]
     [SerializeField] private Transform log;
     [SerializeField] private Transform readyKnife;
@@ -155,14 +157,19 @@ public class KnifeHitStage : MonoBehaviour
         var tip = (Vector2)log.position + new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * logRadius;
         var outward = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
         knife.position = tip + outward * (knifeLength * 0.35f);
-        knife.localRotation = Quaternion.Euler(0f, 0f, abs - 90f);
+        // The knife sprite faces up at its default rotation, so point its tip
+        // toward the log rather than away from it.
+        knife.localRotation = Quaternion.Euler(0f, 0f, abs + 90f);
     }
 
     private void StartBounce(Vector2 hitDir)
     {
         _bouncing = true;
-        _bounceVel = (-hitDir + Vector2.down * 0.6f).normalized * 10f;
+        // hitDir points from the log center to the impact point. Move out from
+        // that point so the existing flying-knife visual is not sent into the log.
+        _bounceVel = (hitDir + Vector2.down * 0.6f).normalized * 10f;
         _bounceLife = 0.55f;
+        GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(BounceTimePenaltyFraction);
         // Keep flying knife as bounce visual.
     }
 
@@ -211,7 +218,6 @@ public class KnifeHitStage : MonoBehaviour
         if (knifePrefab != null)
         {
             go = Instantiate(knifePrefab, pos, Quaternion.identity, spawnParent);
-            go.transform.localScale = new Vector3(0.22f, knifeLength, 1f);
         }
         else
         {

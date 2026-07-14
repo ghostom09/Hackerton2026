@@ -11,6 +11,7 @@ public class SnakeEscapeStage : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private Transform boardRoot;
     [SerializeField] private GameObject cellPrefab;
+    [SerializeField] private GameObject boxPrefab;
     [SerializeField] private SpriteRenderer bg;
 
     [Header("Rules")]
@@ -19,6 +20,7 @@ public class SnakeEscapeStage : MonoBehaviour
     [SerializeField] private float cellSize = 0.55f;
     [SerializeField] private float stepInterval = 0.18f;
     [SerializeField] private int kitsToCollect = 5;
+    [SerializeField, Min(0f)] private float wallHitTimePenalty = 1f;
 
     private readonly List<Vector2Int> _snake = new();
     private readonly HashSet<Vector2Int> _fires = new();
@@ -26,6 +28,7 @@ public class SnakeEscapeStage : MonoBehaviour
     private Vector2Int _dir = Vector2Int.right;
     private Vector2Int _nextDir = Vector2Int.right;
     private Vector2Int _kit;
+    private Transform _kitBox;
     private float _timer;
     private int _collected;
     private bool _complete;
@@ -76,8 +79,15 @@ public class SnakeEscapeStage : MonoBehaviour
         _dir = _nextDir;
         var head = _snake[0] + _dir;
 
-        if (head.x < 0 || head.y < 0 || head.x >= width || head.y >= height ||
-            _fires.Contains(head) || _snake.Contains(head))
+        bool hitWall = head.x < 0 || head.y < 0 || head.x >= width || head.y >= height;
+        if (hitWall)
+        {
+            GameManager.Instance?.ReduceCurrentMapTime(wallHitTimePenalty);
+            ResetSnake();
+            return;
+        }
+
+        if (_fires.Contains(head) || _snake.Contains(head))
         {
             ResetSnake();
             return;
@@ -86,6 +96,7 @@ public class SnakeEscapeStage : MonoBehaviour
         _snake.Insert(0, head);
         if (head == _kit)
         {
+            RemoveKitBox();
             _collected++;
             if (_collected >= kitsToCollect)
             {
@@ -123,7 +134,8 @@ public class SnakeEscapeStage : MonoBehaviour
             if (_fires.Contains(p) || _snake.Contains(p))
                 continue;
             _kit = p;
-            SetCell(_kit, new Color(0.3f, 0.85f, 1f), "Kit");
+            SetCell(_kit, new Color(0.18f, 0.2f, 0.22f), "Kit");
+            SpawnKitBox();
             return;
         }
     }
@@ -160,7 +172,7 @@ public class SnakeEscapeStage : MonoBehaviour
             }
             if (kv.Key == _kit)
             {
-                SetCell(kv.Key, new Color(0.3f, 0.85f, 1f), "Kit");
+                SetCell(kv.Key, new Color(0.18f, 0.2f, 0.22f), "Kit");
                 continue;
             }
             SetCell(kv.Key, new Color(0.18f, 0.2f, 0.22f), "Floor");
@@ -169,18 +181,43 @@ public class SnakeEscapeStage : MonoBehaviour
         for (var i = 0; i < _snake.Count; i++)
         {
             var c = i == 0 ? new Color(0.35f, 0.85f, 0.45f) : new Color(0.25f, 0.65f, 0.35f);
-            SetCell(_snake[i], c, "Snake");
+            SetCell(_snake[i], c, "Snake", 3);
         }
     }
 
-    private void SetCell(Vector2Int p, Color color, string label)
+    private void SpawnKitBox()
+    {
+        if (boxPrefab == null || !_visuals.TryGetValue(_kit, out var kitCell) || kitCell == null)
+            return;
+
+        _kitBox = Instantiate(boxPrefab, kitCell).transform;
+        _kitBox.name = $"Box_{_kit.x}_{_kit.y}";
+        _kitBox.localPosition = Vector3.zero;
+
+        foreach (var sprite in _kitBox.GetComponentsInChildren<SpriteRenderer>(true))
+            sprite.sortingOrder = 2;
+    }
+
+    private void RemoveKitBox()
+    {
+        if (_kitBox == null)
+            return;
+
+        Destroy(_kitBox.gameObject);
+        _kitBox = null;
+    }
+
+    private void SetCell(Vector2Int p, Color color, string label, int sortingOrder = 1)
     {
         if (!_visuals.TryGetValue(p, out var t) || t == null)
             return;
         t.name = $"{label}_{p.x}_{p.y}";
         var sr = MiniGameVisuals.FindSprite(t);
         if (sr != null)
+        {
             sr.color = color;
+            sr.sortingOrder = sortingOrder;
+        }
     }
 
     private Transform SpawnCell(Vector2 pos, Color color, string name)
@@ -214,6 +251,7 @@ public class SnakeEscapeStage : MonoBehaviour
 
     private void ClearBoard()
     {
+        _kitBox = null;
         _visuals.Clear();
         _fires.Clear();
         for (var i = boardRoot.childCount - 1; i >= 0; i--)

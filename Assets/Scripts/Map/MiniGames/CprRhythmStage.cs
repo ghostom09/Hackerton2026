@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 [DisallowMultipleComponent]
 public class CprRhythmStage : MonoBehaviour
 {
+    private const float MistimedPressPenaltySeconds = 1f;
+
     [Header("Refs")]
     [SerializeField] private Transform needle;
     [SerializeField] private Transform barLeft;
@@ -78,6 +80,7 @@ public class CprRhythmStage : MonoBehaviour
         {
             SpawnFlash(false);
             _hits = Mathf.Max(0, _hits - 1);
+            GameManager.Instance?.ReduceCurrentMapTime(MistimedPressPenaltySeconds);
         }
     }
 

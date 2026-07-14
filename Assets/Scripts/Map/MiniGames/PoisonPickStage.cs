@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 [DisallowMultipleComponent]
 public class PoisonPickStage : MonoBehaviour
 {
+    private const float WrongBottleTimePenaltyFraction = 1f / 3f;
+
     [Header("Refs")]
     [SerializeField] private Camera targetCamera;
     [SerializeField] private MiniGameTarget[] bottles;
@@ -117,6 +119,7 @@ public class PoisonPickStage : MonoBehaviour
                 if (renderer != null)
                     renderer.color = new Color(0.3f, 0.8f, 0.2f);
                 bottle.transform.localPosition += new Vector3(Random.Range(-0.08f, 0.08f), 0f, 0f);
+                GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(WrongBottleTimePenaltyFraction);
             }
             return;
         }
