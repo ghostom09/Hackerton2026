@@ -11,6 +11,10 @@ public class VerticalDodgePlayer : MonoBehaviour
     [SerializeField] private float minY = -4f;
     [SerializeField] private float maxY = 4f;
 
+    public float VerticalSpeed => verticalSpeed;
+    public float MinY => minY;
+    public float MaxY => maxY;
+
     private Rigidbody2D rb;
     private float verticalInput;
     private bool canMove = true;
