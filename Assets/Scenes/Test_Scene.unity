@@ -119,6 +119,63 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &1102157871
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 854173194369614208, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 880600851461438336, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
+      propertyPath: m_Name
+      value: Stage-LaserMaze
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 41d0bae6591d4c25bd5d5c2f01a6fc14, type: 3}
 --- !u!1 &1694607320
 GameObject:
   m_ObjectHideFlags: 0
@@ -261,3 +318,4 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1694607323}
+  - {fileID: 1102157871}

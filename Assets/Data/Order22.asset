@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07d933999036d4d43b3c61931a25059f, type: 3}
   m_Name: Order22
   m_EditorClassIdentifier: Assembly-CSharp::OrderSO
-  orderDialog: "<type charDelay=0.06><blink><color r=120 g=255 b=160>\uC548\uC804\uD55C
-    \uC5D8\uB9AC\uBCA0\uC774\uD130\uB97C \uACE0\uB974\uC138\uC694</color></blink></type>"
-  roomPrefab: {fileID: 284859550740231456, guid: fb5695f0edea4d0892a3d0e9c3ff9cf0, type: 3}
-  time: 7
+  orderDialog: "<type charDelay=0.06><drip><color r=100 g=210 b=255>\uB9C8\uC6B0\uC2A4\uB97C
+    \uD754\uB4E4\uC5B4 \uC138\uADE0\uC744 \uB5A8\uC5B4\uB728\uB9AC\uC138\uC694!</color></drip></type>"
+  roomPrefab: {fileID: 898910976958981248, guid: 622e93c1ec064c3eb8cfbb0513b5330c, type: 3}
+  time: 20

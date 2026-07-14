@@ -17,7 +17,7 @@ public class KnifeHitStage : MonoBehaviour
 
     [Header("Rules")]
     [Min(1)] [SerializeField] private int requiredKnives = 8;
-    [SerializeField] private float spinSpeed = 14f;
+    [SerializeField] private float spinSpeed = 140f;
     [SerializeField] private float spinAccel = 4f;
     [SerializeField] private float logRadius = 1.55f;
     [SerializeField] private float knifeSpeed = 22f;
