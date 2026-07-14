@@ -33,6 +33,8 @@ public class UIManager : MonoBehaviour
     private Coroutine _expressionRoutine;
     private Vector3 _profileBaseScale;
 
+    public float CompleteEmotionDuration => completeEmotionDuration;
+
     void Awake()
     {
         if(Instance == null)
@@ -46,7 +48,17 @@ public class UIManager : MonoBehaviour
 
     public void CompleteMap()
     {
-        ShowEmotion(charEmotion.happy);
+        ShowTemporaryEmotion(charEmotion.happy);
+    }
+
+    public void ShowSadForTimerReduced()
+    {
+        ShowTemporaryEmotion(charEmotion.sad);
+    }
+
+    public void ShowTemporaryEmotion(charEmotion emotion)
+    {
+        ShowEmotion(emotion);
 
         if (_emotionRoutine != null)
             StopCoroutine(_emotionRoutine);
@@ -61,7 +73,7 @@ public class UIManager : MonoBehaviour
         _emotionRoutine = null;
     }
 
-    private void ShowEmotion(charEmotion emotion)
+    public void ShowEmotion(charEmotion emotion)
     {
         if (charProfile == null)
             return;

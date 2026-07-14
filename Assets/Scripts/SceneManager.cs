@@ -4,8 +4,6 @@ public enum SceneName
 {
     MainMenu,
     InGame,
-    HappyEnding,
-    SadEnding,
 }
 
 public class SceneManager : MonoBehaviour
@@ -24,6 +22,12 @@ public class SceneManager : MonoBehaviour
 
     public void ChangeScene(SceneName scene)
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(scene.ToString());
+        string sceneName = scene switch
+        {
+            SceneName.InGame => "InGameScene",
+            _ => scene.ToString(),
+        };
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
     }
 }

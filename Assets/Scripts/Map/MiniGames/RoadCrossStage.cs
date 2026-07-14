@@ -15,7 +15,10 @@ public class RoadCrossStage : MonoBehaviour
     [SerializeField] private float moveSpeed = 4.5f;
     [SerializeField] private float carSpeed = 5.5f;
     [SerializeField] private float spawnInterval = 0.85f;
-    [SerializeField] private Vector2 laneYRange = new(-1.6f, 1.8f);
+    [Tooltip("The two lanes above the LaneMark. Cars in these lanes drive left to right.")]
+    [SerializeField] private Vector2 upperLaneYs = new(0.55f, 1.5f);
+    [Tooltip("The two lanes below the LaneMark. Cars in these lanes drive right to left.")]
+    [SerializeField] private Vector2 lowerLaneYs = new(-0.55f, -1.5f);
     [SerializeField] private float goalReachDistance = 1.2f;
 
     private readonly List<Transform> _cars = new();
@@ -82,8 +85,11 @@ public class RoadCrossStage : MonoBehaviour
         if (carPrefab == null)
             return;
 
-        var laneY = Random.Range(laneYRange.x, laneYRange.y);
+        // Above the centre LaneMark traffic travels left-to-right; below it, right-to-left.
         var fromLeft = Random.value > 0.5f;
+        var laneY = fromLeft
+            ? RandomLane(upperLaneYs)
+            : RandomLane(lowerLaneYs);
         var x = fromLeft ? -7f : 7f;
         var go = Instantiate(carPrefab, new Vector3(x, laneY, 0f), Quaternion.identity, spawnParent);
         var scale = go.transform.localScale;
@@ -91,6 +97,11 @@ public class RoadCrossStage : MonoBehaviour
         go.transform.localScale = scale;
         go.SetActive(true);
         _cars.Add(go.transform);
+    }
+
+    private static float RandomLane(Vector2 lanes)
+    {
+        return Random.value > 0.5f ? lanes.x : lanes.y;
     }
 
     private void Complete()
