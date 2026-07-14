@@ -50,7 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DebrisPaddleStage
   paddle: {fileID: 6461976377342253689}
   spawnParent: {fileID: 582297806186561885}
-  debrisPrefab: {fileID: 4129295274424652386, guid: 822f717693a12ce42aa02e1432a039d8, type: 3}
+  debrisPrefab: {fileID: 7458185246793835761, guid: 4dc58d0407064b14a8e28b14432e4938, type: 3}
   groundLine: {fileID: 1029274492911309526}
   requiredCatches: 8
   paddleSpeed: 9
@@ -176,7 +176,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.8, y: 0.35, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6461976377342253689}
@@ -230,8 +230,8 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 4
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 56af53b5fba05c24e953fb8db9105996, type: 3}
-  m_Color: {r: 0.3, g: 0.8, b: 0.45, a: 1}
+  m_Sprite: {fileID: -3787186718068959810, guid: 098bb764a31172041abe620dc43b965c, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
