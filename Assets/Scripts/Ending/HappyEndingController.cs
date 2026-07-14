@@ -38,13 +38,15 @@ public class HappyEndingController : MonoBehaviour
     [SerializeField] private Image rightCharacter;
 
     [Header("Dialogue UI")]
-    [SerializeField] private CanvasGroup dialoguePanel;
+    [SerializeField] private Image dialoguePanel;
     [SerializeField] private TMP_Text nameText;
     [SerializeField] private TMP_Text dialogueText;
+    [Tooltip("Optional background sprite shown only while the dialogue panel is visible.")]
+    [SerializeField] private GameObject dialogueBackground;
 
     [Header("Ending")]
     [SerializeField] private GameObject endingImage;
-    [SerializeField] private CanvasGroup whiteFadePanel;
+    [SerializeField] private Image whiteFadePanel;
     [SerializeField] private TMP_Text thankYouText;
 
     [Header("Dialogue")]
@@ -54,10 +56,12 @@ public class HappyEndingController : MonoBehaviour
     [SerializeField] private float openingFadeDuration = 2f;
     [SerializeField] private float dialogueDelay = 0.5f;
     [SerializeField] private float dialogueFadeDuration = 0.5f;
-    [SerializeField] private float endingImageDuration = 3f;
+    [SerializeField] private float endingImageDuration = .2f;
     [SerializeField] private float endingFadeDuration = 2f;
+    [SerializeField] private float endingImageFadeInDuration = .25f;
+    [SerializeField] private float endingImageFadeOutDuration = .35f;
     [SerializeField] private float endingImageRiseDuration = 1.1f;
-    [SerializeField] private float thankYouDuration = 1.8f;
+    [SerializeField] private float thankYouDuration = .75f;
 
     private readonly Color activeColor = Color.white;
     private readonly Color inactiveColor = new(0.35f, 0.35f, 0.35f, 1f);
@@ -71,10 +75,16 @@ public class HappyEndingController : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+        if (whiteFadePanel == null)
+            whiteFadePanel = GameObject.Find("WhiteFadePanel")?.GetComponent<Image>();
+        if (dialoguePanel == null)
+            dialoguePanel = GameObject.Find("DialoguePanel")?.GetComponent<Image>();
+
         EnsureDefaultDialogues();
 
-        SetCanvasGroup(dialoguePanel, false, 0f);
-        SetCanvasGroup(whiteFadePanel, true, 1f);
+        SetImageVisible(dialoguePanel, false, 0f);
+        SetDialogueBackgroundVisible(false);
+        SetImageVisible(whiteFadePanel, true, 1f);
         SetCharactersActive(false);
 
         if (endingImage != null)
@@ -111,27 +121,32 @@ public class HappyEndingController : MonoBehaviour
     {
         changingStage = true;
 
-        yield return Fade(whiteFadePanel, 1f, 0f, openingFadeDuration);
+        // Prepare the first dialogue behind the white screen. The opening fade-out
+        // then reveals a fully loaded conversation instead of an empty scene.
+        dialogueIndex = 0;
+        bool hasDialogue = dialogues != null && dialogues.Length > 0;
+        if (hasDialogue)
+        {
+            SetCharactersActive(true);
+            SetImageVisible(dialoguePanel, true, 1f);
+            SetDialogueBackgroundVisible(true);
+            ShowDialogue(dialogues[dialogueIndex]);
+        }
+
+        yield return new WaitForSecondsRealtime(dialogueDelay);
+        yield return FadeImage(whiteFadePanel, 1f, 0f, openingFadeDuration);
 
         if (whiteFadePanel != null)
             whiteFadePanel.gameObject.SetActive(false);
 
-        yield return new WaitForSecondsRealtime(dialogueDelay);
-
-        SetCharactersActive(true);
-        yield return Fade(dialoguePanel, 0f, 1f, dialogueFadeDuration);
-
         changingStage = false;
         currentStage = Stage.Dialogue;
-        dialogueIndex = 0;
 
-        if (dialogues == null || dialogues.Length == 0)
+        if (!hasDialogue)
         {
             StartCoroutine(PlayEndingImage());
             yield break;
         }
-
-        ShowDialogue(dialogues[dialogueIndex]);
     }
 
     private void NextDialogue()
@@ -182,8 +197,12 @@ public class HappyEndingController : MonoBehaviour
         changingStage = true;
         currentStage = Stage.EndingImage;
 
-        SetCanvasGroup(dialoguePanel, false, 0f);
+        SetImageVisible(dialoguePanel, false, 0f);
+        SetDialogueBackgroundVisible(false);
         SetCharactersActive(false);
+
+        // Fade to white first, then place the ending image behind the white overlay.
+        yield return FadeImage(whiteFadePanel, 0f, 1f, endingImageFadeInDuration);
 
         if (endingImage != null)
         {
@@ -191,15 +210,14 @@ public class HappyEndingController : MonoBehaviour
             yield return RiseEndingImage();
         }
 
-        // A white flash reveals the ending image after it rises into view.
-        yield return Fade(whiteFadePanel, 0f, 1f, endingFadeDuration * .5f);
-        yield return Fade(whiteFadePanel, 1f, 0f, endingFadeDuration * .5f);
+        // The fade-out reveals the image only after it has appeared in place.
+        yield return FadeImage(whiteFadePanel, 1f, 0f, endingImageFadeOutDuration);
 
         yield return new WaitForSecondsRealtime(endingImageDuration);
         yield return ShowThankYou();
 
         // Final white fade before returning to the title screen.
-        yield return Fade(whiteFadePanel, 0f, 1f, endingFadeDuration);
+        yield return FadeImage(whiteFadePanel, 0f, 1f, endingFadeDuration);
 
         currentStage = Stage.Finished;
         LoadMainMenu();
@@ -301,6 +319,42 @@ public class HappyEndingController : MonoBehaviour
         target.blocksRaycasts = endAlpha > 0f;
     }
 
+    private static IEnumerator FadeImage(Image target, float startAlpha, float endAlpha, float duration)
+    {
+        if (target == null)
+            yield break;
+
+        target.gameObject.SetActive(true);
+        var color = target.color;
+        color.a = startAlpha;
+        target.color = color;
+        target.raycastTarget = true;
+
+        float safeDuration = Mathf.Max(.01f, duration);
+        for (float elapsed = 0f; elapsed < safeDuration; elapsed += Time.unscaledDeltaTime)
+        {
+            color.a = Mathf.Lerp(startAlpha, endAlpha, elapsed / safeDuration);
+            target.color = color;
+            yield return null;
+        }
+
+        color.a = endAlpha;
+        target.color = color;
+        target.raycastTarget = endAlpha > 0f;
+    }
+
+    private static void SetImageVisible(Image target, bool visible, float alpha)
+    {
+        if (target == null)
+            return;
+
+        target.gameObject.SetActive(visible);
+        var color = target.color;
+        color.a = alpha;
+        target.color = color;
+        target.raycastTarget = visible && alpha > 0f;
+    }
+
     private void SetCharactersActive(bool active)
     {
         if (leftCharacter != null)
@@ -317,6 +371,12 @@ public class HappyEndingController : MonoBehaviour
 
         if (rightCharacter != null)
             rightCharacter.color = rightColor;
+    }
+
+    private void SetDialogueBackgroundVisible(bool visible)
+    {
+        if (dialogueBackground != null)
+            dialogueBackground.SetActive(visible);
     }
 
     private void EnsureDefaultDialogues()

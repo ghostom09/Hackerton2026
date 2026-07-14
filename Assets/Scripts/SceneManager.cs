@@ -3,7 +3,8 @@ using UnityEngine;
 public enum SceneName
 {
     MainMenu,
-    InGame,
+    Prologue,
+    InGameScene,
     
     HappyEnding,
     BadEnding,
@@ -25,12 +26,6 @@ public class SceneManager : MonoBehaviour
 
     public void ChangeScene(SceneName scene)
     {
-        string sceneName = scene switch
-        {
-            SceneName.InGame => "InGameScene",
-            _ => scene.ToString(),
-        };
-
-        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(scene.ToString());
     }
 }

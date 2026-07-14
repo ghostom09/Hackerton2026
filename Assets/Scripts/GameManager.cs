@@ -82,7 +82,7 @@ public class GameManager : MonoBehaviour
         currentMapTime = timer != null ? timer.RemainingTime : Mathf.Max(0f, currentMapTime - UnityEngine.Time.deltaTime);
         if (currentMapTime <= 0f)
         {
-            StopRun();
+            TriggerBadEnding();
             return;
         }
 
@@ -115,11 +115,22 @@ public class GameManager : MonoBehaviour
 
     public void StopRun()
     {
+        TriggerBadEnding();
+    }
+
+    public void TriggerBadEnding()
+    {
         if (isGameStopped) return;
-        isGameStopped = true;
-        currentMapTime = 0f;
+        EndRun();
         UIManager.Instance?.ShowEmotion(charEmotion.menhara);
-        StopAllGameplay();
+        LoadEndingScene("BadEnding");
+    }
+
+    public void TriggerHappyEnding()
+    {
+        if (isGameStopped) return;
+        EndRun();
+        LoadEndingScene("HappyEnding");
     }
 
     public void StopAllGameplay()
@@ -157,10 +168,10 @@ public class GameManager : MonoBehaviour
         if (isGameStopped) return;
         if (_currentMap != null) Destroy(_currentMap);
         currentMapIndex++;
-        if (currentMapIndex >= totalMapCount) { StopRun(); return; }
+        if (currentMapIndex >= totalMapCount) { TriggerHappyEnding(); return; }
 
         NowMap = _runtimeOrders[currentMapIndex];
-        if (NowMap == null || NowMap.roomPrefab == null) { StopRun(); return; }
+        if (NowMap == null || NowMap.roomPrefab == null) { TriggerBadEnding(); return; }
         _currentMap = Instantiate(NowMap.roomPrefab, mapSpawnPosition, Quaternion.identity);
         if (_currentMap.TryGetComponent<MapBase>(out var mapBase)) mapBase.Init(NowMap);
         StartMapTimer(NowMap.time);
@@ -178,9 +189,24 @@ public class GameManager : MonoBehaviour
         _isSwitchingMap = false;
         _nextMapRoutine = null;
         if (currentMapIndex >= totalMapCount - 1)
-            StopRun();
+            TriggerHappyEnding();
         else
             LoadNextMap();
+    }
+
+    private void EndRun()
+    {
+        isGameStopped = true;
+        currentMapTime = 0f;
+        StopAllGameplay();
+    }
+
+    private static void LoadEndingScene(string sceneName)
+    {
+        if (Application.CanStreamedLevelBeLoaded(sceneName))
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+        else
+            Debug.LogError($"{sceneName} is not included in the build settings.");
     }
 
     private void HandleTimerReduced(float amount)

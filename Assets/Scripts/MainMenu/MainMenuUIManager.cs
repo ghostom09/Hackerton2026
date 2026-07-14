@@ -41,10 +41,10 @@ public class MainMenuUIManager : MonoBehaviour
 
         yield return FadeToBlack();
 
-        if (Application.CanStreamedLevelBeLoaded("InGameScene"))
-            UnityEngine.SceneManagement.SceneManager.LoadScene("InGameScene");
+        if (Application.CanStreamedLevelBeLoaded("Prologue"))
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Prologue");
         else
-            Debug.LogError("InGameScene is not included in the build settings.", this);
+            Debug.LogError("Prologue is not included in the build settings.", this);
     }
 
     public void SettingOn()
