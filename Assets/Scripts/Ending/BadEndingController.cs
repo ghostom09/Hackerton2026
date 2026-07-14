@@ -12,29 +12,34 @@ public class BadEndingController : MonoBehaviour
     [SerializeField] private Sprite phoneSprite;
     [SerializeField] private Sprite glitchSprite;
 
-    [Header("Sound")]
-    [SerializeField] private AudioClip phoneRingSound;
-
     [Header("Timing")]
     [SerializeField] private float openingFadeDuration = 2f;
     [SerializeField] private float ringDelay = 2f;
-    [SerializeField] private float glitchDuration = 2f;
+    [SerializeField] private float glitchDuration = .5f;
+    [SerializeField, Min(1f)] private float messageScrollSensitivity = 120f;
 
     [Header("Messages")]
     [SerializeField] private string senderName = "유나";
 
+    [Tooltip("One chat message per entry. Entries are shown one at a time on click or Space.")]
     [TextArea(2, 5)]
     [SerializeField] private string[] messages;
 
-    private Canvas canvas;
+    [Header("Scene UI References")]
+    [SerializeField] private Canvas canvas;
+    [SerializeField] private Image roomBackgroundImage;
+    [SerializeField] private Image phoneImage;
+    [SerializeField] private UIButton phoneButton;
+    [SerializeField] private RectTransform phoneRect;
+    [SerializeField] private GameObject chatPanel;
+    [SerializeField] private TMP_Text chatTitleText;
+    [SerializeField] private TMP_Text messageText;
+    [SerializeField] private ScrollRect messageScrollRect;
+    [SerializeField] private Image fadePanel;
+    [SerializeField] private Image glitchPanel;
+
     private TMP_FontAsset dialogueFont;
-    private UIButton phoneButton;
-    private RectTransform phoneRect;
-    private GameObject chatPanel;
-    private TMP_Text messageText;
-    private CanvasGroup fadePanel;
-    private CanvasGroup glitchPanel;
-    private AudioSource audioSource;
+    private RectTransform messageContentRect;
 
     private int messageIndex;
     private bool chatOpened;
@@ -45,7 +50,10 @@ public class BadEndingController : MonoBehaviour
         Time.timeScale = 1f;
         EnsureDefaultMessages();
         PrepareCanvas();
-        BuildTemporaryUI();
+        if (HasSceneUiReferences())
+            PrepareReferencedUI();
+        else
+            BuildTemporaryUI();
     }
 
     private void Start()
@@ -58,14 +66,36 @@ public class BadEndingController : MonoBehaviour
         if (!chatOpened || glitchPlaying)
             return;
 
+        HandleMessageScroll();
+
         bool pressSpace = Keyboard.current != null &&
                           Keyboard.current.spaceKey.wasPressedThisFrame;
 
         bool mouseClick = Mouse.current != null &&
                           Mouse.current.leftButton.wasPressedThisFrame;
 
-        if (pressSpace || mouseClick)
+        if (pressSpace || (mouseClick && !IsPointerOverMessage()))
             ShowNextMessage();
+    }
+
+    private void HandleMessageScroll()
+    {
+        if (messageScrollRect == null || Mouse.current == null)
+            return;
+
+        float wheelY = Mouse.current.scroll.ReadValue().y;
+        if (!Mathf.Approximately(wheelY, 0f))
+            messageScrollRect.verticalNormalizedPosition = Mathf.Clamp01(
+                messageScrollRect.verticalNormalizedPosition + wheelY * .0025f);
+    }
+
+    private bool IsPointerOverMessage()
+    {
+        return messageScrollRect != null && messageScrollRect.viewport != null &&
+               Mouse.current != null && RectTransformUtility.RectangleContainsScreenPoint(
+                   messageScrollRect.viewport,
+                   Mouse.current.position.ReadValue(),
+                   canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null);
     }
 
     private void PrepareCanvas()
@@ -94,9 +124,6 @@ public class BadEndingController : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < canvas.transform.childCount; i++)
-            canvas.transform.GetChild(i).gameObject.SetActive(false);
-
         CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
         if (scaler == null)
             scaler = canvas.gameObject.AddComponent<CanvasScaler>();
@@ -106,14 +133,50 @@ public class BadEndingController : MonoBehaviour
         scaler.matchWidthOrHeight = 0.5f;
     }
 
+    private bool HasSceneUiReferences()
+    {
+        return phoneButton != null && chatPanel != null && messageText != null &&
+               messageScrollRect != null && messageScrollRect.content != null &&
+               fadePanel != null && glitchPanel != null;
+    }
+
+    private void PrepareReferencedUI()
+    {
+        phoneRect ??= phoneButton.GetComponent<RectTransform>();
+        messageContentRect = messageScrollRect.content;
+        ConfigureMessageViewport();
+        if (messageText.transform.parent != messageContentRect)
+            messageText.transform.SetParent(messageContentRect, false);
+        messageScrollRect.horizontal = false;
+        messageScrollRect.vertical = true;
+        messageScrollRect.scrollSensitivity = messageScrollSensitivity;
+        AlignMessageToTopLeft();
+        HideScrollBar();
+
+        if (roomBackgroundImage != null && roomBackgroundSprite != null)
+            roomBackgroundImage.sprite = roomBackgroundSprite;
+        if (phoneImage != null && phoneSprite != null)
+            phoneImage.sprite = phoneSprite;
+        if (glitchSprite != null)
+            glitchPanel.sprite = glitchSprite;
+        if (chatTitleText != null)
+            chatTitleText.text = senderName;
+
+        phoneButton.onClick.AddListener(OpenPhone);
+        phoneButton.interactable = false;
+        chatPanel.SetActive(false);
+        SetImageVisible(glitchPanel, false, 0f);
+        SetImageVisible(fadePanel, true, 1f);
+    }
+
     private void BuildTemporaryUI()
     {
-        Image roomBackground = CreateImage(
+        roomBackgroundImage = CreateImage(
             "RoomBackground",
             canvas.transform,
             roomBackgroundSprite,
             new Color(0.16f, 0.17f, 0.2f, 1f));
-        Stretch(roomBackground.rectTransform);
+        Stretch(roomBackgroundImage.rectTransform);
 
         GameObject phoneObject = new(
             "PhoneButton",
@@ -130,7 +193,7 @@ public class BadEndingController : MonoBehaviour
         phoneRect.anchoredPosition = new Vector2(0f, -190f);
         phoneRect.sizeDelta = new Vector2(220f, 130f);
 
-        Image phoneImage = phoneObject.GetComponent<Image>();
+        phoneImage = phoneObject.GetComponent<Image>();
         phoneImage.sprite = phoneSprite;
         phoneImage.color = phoneSprite != null
             ? Color.white
@@ -160,8 +223,8 @@ public class BadEndingController : MonoBehaviour
             glitchSprite,
             Color.black);
         Stretch(glitchImage.rectTransform);
-        glitchPanel = glitchImage.gameObject.AddComponent<CanvasGroup>();
-        SetCanvasGroup(glitchPanel, false, 0f);
+        glitchPanel = glitchImage;
+        SetImageVisible(glitchPanel, false, 0f);
 
         Image fadeImage = CreateImage(
             "BlackFadePanel",
@@ -169,15 +232,8 @@ public class BadEndingController : MonoBehaviour
             null,
             Color.black);
         Stretch(fadeImage.rectTransform);
-        fadePanel = fadeImage.gameObject.AddComponent<CanvasGroup>();
-        SetCanvasGroup(fadePanel, true, 1f);
-
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-            audioSource = gameObject.AddComponent<AudioSource>();
-
-        audioSource.playOnAwake = false;
-        audioSource.loop = true;
+        fadePanel = fadeImage;
+        SetImageVisible(fadePanel, true, 1f);
     }
 
     private GameObject CreateChatPanel()
@@ -195,7 +251,7 @@ public class BadEndingController : MonoBehaviour
         panelRect.anchoredPosition = Vector2.zero;
         panelRect.sizeDelta = new Vector2(760f, 920f);
 
-        CreateText(
+        chatTitleText = CreateText(
             "ChatTitle",
             panelRect,
             senderName,
@@ -205,32 +261,64 @@ public class BadEndingController : MonoBehaviour
             new Vector2(0f, 410f),
             new Vector2(680f, 70f));
 
+        GameObject viewportObject = new(
+            "MessageViewport",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image),
+            typeof(RectMask2D),
+            typeof(ScrollRect));
+        viewportObject.transform.SetParent(panelRect, false);
+
+        RectTransform viewportRect = viewportObject.GetComponent<RectTransform>();
+        viewportRect.anchorMin = viewportRect.anchorMax = new Vector2(.5f, .5f);
+        viewportRect.pivot = new Vector2(.5f, .5f);
+        viewportRect.anchoredPosition = new Vector2(0f, -45f);
+        viewportRect.sizeDelta = new Vector2(650f, 720f);
+        viewportObject.GetComponent<Image>().color = Color.clear;
+
+        GameObject contentObject = new("MessageContent", typeof(RectTransform));
+        contentObject.transform.SetParent(viewportRect, false);
+        messageContentRect = contentObject.GetComponent<RectTransform>();
+        messageContentRect.anchorMin = messageContentRect.anchorMax = new Vector2(0f, 1f);
+        messageContentRect.pivot = new Vector2(0f, 1f);
+        messageContentRect.anchoredPosition = new Vector2(16f, 0f);
+        messageContentRect.sizeDelta = new Vector2(618f, 1f);
+
         messageText = CreateText(
             "MessageText",
-            panelRect,
+            messageContentRect,
             string.Empty,
             31f,
             TextAlignmentOptions.TopLeft,
             new Color(0.08f, 0.09f, 0.11f),
-            new Vector2(0f, -20f),
-            new Vector2(650f, 760f));
+            Vector2.zero,
+            Vector2.zero);
+        RectTransform messageRect = messageText.rectTransform;
+        messageRect.anchorMin = messageRect.anchorMax = new Vector2(0f, 1f);
+        messageRect.pivot = new Vector2(0f, 1f);
+        messageRect.anchoredPosition = Vector2.zero;
+        messageRect.sizeDelta = new Vector2(618f, 1f);
         messageText.textWrappingMode = TextWrappingModes.Normal;
+
+        messageScrollRect = viewportObject.GetComponent<ScrollRect>();
+        messageScrollRect.viewport = viewportRect;
+        messageScrollRect.content = messageContentRect;
+        messageScrollRect.horizontal = false;
+        messageScrollRect.scrollSensitivity = messageScrollSensitivity;
+        messageScrollRect.movementType = ScrollRect.MovementType.Clamped;
+        AlignMessageToTopLeft();
+        HideScrollBar();
 
         return panelImage.gameObject;
     }
 
     private IEnumerator StartBadEnding()
     {
-        yield return Fade(fadePanel, 1f, 0f, openingFadeDuration);
+        yield return FadeImage(fadePanel, 1f, 0f, openingFadeDuration);
         fadePanel.gameObject.SetActive(false);
 
         yield return new WaitForSecondsRealtime(ringDelay);
-
-        if (phoneRingSound != null)
-        {
-            audioSource.clip = phoneRingSound;
-            audioSource.Play();
-        }
 
         phoneButton.interactable = true;
         StartCoroutine(ShakePhoneWhileRinging());
@@ -259,7 +347,6 @@ public class BadEndingController : MonoBehaviour
         chatOpened = true;
         phoneButton.interactable = false;
         phoneButton.gameObject.SetActive(false);
-        audioSource.Stop();
 
         chatPanel.SetActive(true);
         messageText.text = string.Empty;
@@ -281,6 +368,7 @@ public class BadEndingController : MonoBehaviour
         messageText.text +=
             $"<b>{senderName}</b>\n{messages[messageIndex]}";
         messageIndex++;
+        ResizeMessageContent();
     }
 
     private IEnumerator PlayGlitch()
@@ -290,21 +378,22 @@ public class BadEndingController : MonoBehaviour
 
         glitchPlaying = true;
         chatPanel.SetActive(false);
-        SetCanvasGroup(glitchPanel, true, 1f);
+        SetImageVisible(glitchPanel, true, 1f);
 
-        RectTransform glitchRect = glitchPanel.GetComponent<RectTransform>();
+        RectTransform glitchRect = glitchPanel.rectTransform;
         float elapsedTime = 0f;
 
         while (elapsedTime < glitchDuration)
         {
             elapsedTime += Time.unscaledDeltaTime;
-            glitchPanel.alpha = Random.Range(0.25f, 1f);
+            Color glitchColor = glitchPanel.color;
+            glitchColor.a = Random.Range(0.25f, 1f);
+            glitchPanel.color = glitchColor;
 
             if (glitchSprite == null)
             {
-                Image image = glitchPanel.GetComponent<Image>();
                 float value = Random.value > 0.35f ? 0f : 1f;
-                image.color = new Color(value, value, value, 1f);
+                glitchPanel.color = new Color(value, value, value, glitchColor.a);
             }
 
             glitchRect.anchoredPosition = new Vector2(
@@ -314,6 +403,9 @@ public class BadEndingController : MonoBehaviour
             yield return new WaitForSecondsRealtime(0.04f);
         }
 
+        SetImageVisible(glitchPanel, false, 0f);
+        SetImageVisible(fadePanel, true, 1f);
+        yield return new WaitForSecondsRealtime(1f);
         LoadMainMenu();
     }
 
@@ -329,15 +421,15 @@ public class BadEndingController : MonoBehaviour
         }
     }
 
-    private IEnumerator Fade(
-        CanvasGroup target,
+    private IEnumerator FadeImage(
+        Image target,
         float startAlpha,
         float endAlpha,
         float duration)
     {
         target.gameObject.SetActive(true);
-        target.alpha = startAlpha;
-        target.blocksRaycasts = true;
+        SetImageAlpha(target, startAlpha);
+        target.raycastTarget = true;
 
         float elapsedTime = 0f;
         float safeDuration = Mathf.Max(0.01f, duration);
@@ -345,15 +437,12 @@ public class BadEndingController : MonoBehaviour
         while (elapsedTime < safeDuration)
         {
             elapsedTime += Time.unscaledDeltaTime;
-            target.alpha = Mathf.Lerp(
-                startAlpha,
-                endAlpha,
-                elapsedTime / safeDuration);
+            SetImageAlpha(target, Mathf.Lerp(startAlpha, endAlpha, elapsedTime / safeDuration));
             yield return null;
         }
 
-        target.alpha = endAlpha;
-        target.blocksRaycasts = endAlpha > 0f;
+        SetImageAlpha(target, endAlpha);
+        target.raycastTarget = endAlpha > 0f;
     }
 
     private Image CreateImage(
@@ -400,6 +489,8 @@ public class BadEndingController : MonoBehaviour
 
         if (dialogueFont != null)
             label.font = dialogueFont;
+        else
+            label.font = TMP_Settings.defaultFontAsset;
 
         RectTransform rect = label.rectTransform;
         rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -408,6 +499,71 @@ public class BadEndingController : MonoBehaviour
         rect.anchoredPosition = position;
         rect.sizeDelta = size;
         return label;
+    }
+
+    private void ResizeMessageContent()
+    {
+        if (messageText == null || messageContentRect == null)
+            return;
+
+        Canvas.ForceUpdateCanvases();
+        float height = Mathf.Max(1f, messageText.preferredHeight + 24f);
+        float width = messageScrollRect != null && messageScrollRect.viewport != null
+            ? Mathf.Max(1f, messageScrollRect.viewport.rect.width - 32f)
+            : 618f;
+        messageText.rectTransform.sizeDelta = new Vector2(width, height);
+        messageContentRect.sizeDelta = new Vector2(width, height);
+        Canvas.ForceUpdateCanvases();
+
+        if (messageScrollRect != null)
+            messageScrollRect.verticalNormalizedPosition = 0f;
+    }
+
+    private void AlignMessageToTopLeft()
+    {
+        if (messageText == null || messageContentRect == null)
+            return;
+
+        messageContentRect.anchorMin = messageContentRect.anchorMax = new Vector2(0f, 1f);
+        messageContentRect.pivot = new Vector2(0f, 1f);
+        messageContentRect.anchoredPosition = new Vector2(16f, 0f);
+
+        RectTransform textRect = messageText.rectTransform;
+        textRect.anchorMin = textRect.anchorMax = new Vector2(0f, 1f);
+        textRect.pivot = new Vector2(0f, 1f);
+        textRect.anchoredPosition = Vector2.zero;
+        messageText.alignment = TextAlignmentOptions.TopLeft;
+    }
+
+    private void ConfigureMessageViewport()
+    {
+        if (messageScrollRect == null || messageScrollRect.viewport == null)
+            return;
+
+        RectTransform viewport = messageScrollRect.viewport;
+        viewport.anchorMin = Vector2.zero;
+        viewport.anchorMax = Vector2.one;
+        viewport.offsetMin = new Vector2(16f, 16f);
+        // Keep the sender title area free at the top of the chat panel.
+        viewport.offsetMax = new Vector2(-16f, -100f);
+    }
+
+    private void HideScrollBar()
+    {
+        if (messageScrollRect == null)
+            return;
+
+        if (messageScrollRect.verticalScrollbar != null)
+        {
+            messageScrollRect.verticalScrollbar.gameObject.SetActive(false);
+            messageScrollRect.verticalScrollbar = null;
+        }
+
+        if (messageScrollRect.horizontalScrollbar != null)
+        {
+            messageScrollRect.horizontalScrollbar.gameObject.SetActive(false);
+            messageScrollRect.horizontalScrollbar = null;
+        }
     }
 
     private void EnsureDefaultMessages()
@@ -432,14 +588,20 @@ public class BadEndingController : MonoBehaviour
         rect.offsetMax = Vector2.zero;
     }
 
-    private static void SetCanvasGroup(
-        CanvasGroup group,
+    private static void SetImageVisible(
+        Image image,
         bool active,
         float alpha)
     {
-        group.gameObject.SetActive(active);
-        group.alpha = alpha;
-        group.interactable = active;
-        group.blocksRaycasts = active;
+        image.gameObject.SetActive(active);
+        SetImageAlpha(image, alpha);
+        image.raycastTarget = active;
+    }
+
+    private static void SetImageAlpha(Image image, float alpha)
+    {
+        Color color = image.color;
+        color.a = alpha;
+        image.color = color;
     }
 }

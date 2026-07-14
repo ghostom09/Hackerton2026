@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>Controls the Prologue dialogue and speaker focus.</summary>
@@ -25,6 +26,7 @@ public sealed class PrologueDialogueController : MonoBehaviour
         [TextArea(2, 4)] public string message;
     }
 
+    [Header("Dialogue Lines")]
     [SerializeField] private DialogueLine[] dialogueLines =
     {
         new DialogueLine { speakingCharacterName = "\uD50C\uB808\uC774\uC5B4", nonSpeakingCharacterName = "\uB3D9\uB8CC", message = "\uC624\uB298\uB3C4 \uAD6C\uC870 \uC694\uCCAD\uC774 \uB4E4\uC5B4\uC654\uC5B4." },
@@ -32,10 +34,18 @@ public sealed class PrologueDialogueController : MonoBehaviour
         new DialogueLine { speakingCharacterName = "\uD50C\uB808\uC774\uC5B4", nonSpeakingCharacterName = "\uB3D9\uB8CC", message = "\uC54C\uACA0\uC5B4. \uBC14\uB85C \uCD9C\uBC1C\uD560\uAC8C." },
     };
 
+    [Header("Scene Text UI (Optional)")]
+    [Tooltip("Assign the Name Text (TMP) from the Prologue canvas.")]
+    [SerializeField] private TextMeshProUGUI speakerNameText;
+    [Tooltip("Assign the Talk Text (TMP) from the Prologue canvas.")]
+    [SerializeField] private TextMeshProUGUI dialogueText;
+    [Header("Scene Transition")]
+    [SerializeField] private string nextSceneName = "InGameScene";
+    [SerializeField] private float blackFadeDuration = .6f;
+
     private readonly Dictionary<string, TextMeshProUGUI> speakerLabels = new();
     private int currentLine;
-    private TextMeshProUGUI speakerNameText;
-    private TextMeshProUGUI dialogueText;
+    private bool changingScene;
 
     private static readonly Color ActiveColor = Color.white;
     private static readonly Color InactiveColor = new(.42f, .42f, .46f, 1f);
@@ -59,15 +69,49 @@ public sealed class PrologueDialogueController : MonoBehaviour
         bool clicked = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
         bool nextPressed = Keyboard.current != null
             && (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame);
-        if (clicked || nextPressed)
+        if (!changingScene && (clicked || nextPressed))
             Advance();
     }
 
     public void Advance()
     {
         if (dialogueLines == null || dialogueLines.Length == 0) return;
+
+        if (currentLine >= dialogueLines.Length - 1)
+        {
+            StartCoroutine(FadeOutAndLoadScene());
+            return;
+        }
+
         currentLine = Mathf.Min(currentLine + 1, dialogueLines.Length - 1);
         ShowCurrentLine();
+    }
+
+    private System.Collections.IEnumerator FadeOutAndLoadScene()
+    {
+        changingScene = true;
+
+        var root = new GameObject("PrologueBlackFade", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        var canvas = root.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 100;
+
+        var fade = CreatePanel("Black", root.transform, Color.black).GetComponent<Image>();
+        Stretch(fade.rectTransform, Vector2.zero, Vector2.one);
+        var color = fade.color;
+        color.a = 0f;
+        fade.color = color;
+
+        float elapsed = 0f;
+        while (elapsed < blackFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            color.a = Mathf.Clamp01(elapsed / blackFadeDuration);
+            fade.color = color;
+            yield return null;
+        }
+
+        SceneManager.Instance.ChangeScene(SceneName.InGameScene);
     }
 
     private void ShowCurrentLine()
@@ -94,6 +138,10 @@ public sealed class PrologueDialogueController : MonoBehaviour
 
     private void BuildDialogueUi()
     {
+        // Use the designer-created texts when assigned in the Inspector.
+        if (speakerNameText != null && dialogueText != null)
+            return;
+
         var root = new GameObject("PrologueDialogueCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         var canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
