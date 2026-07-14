@@ -179,7 +179,7 @@ public class HappyEndingController : MonoBehaviour
             dialogueIndex++;
             if (dialogueIndex >= dialogues.Length)
             {
-                StartCoroutine(PlayEndingImage());
+                StartCoroutine(FinishAfterImageDialogue());
                 return;
             }
 
@@ -230,7 +230,10 @@ public class HappyEndingController : MonoBehaviour
         _activeMidDialogueImage.SetActive(true);
         EnsureMidDialogueText();
         if (midDialogueText != null)
+        {
+            PositionMidDialogueText();
             midDialogueText.gameObject.SetActive(true);
+        }
         yield return FadeImage(whiteFadePanel, 1f, 0f, midDialogueImageFadeDuration);
         whiteFadePanel.gameObject.SetActive(false);
 
@@ -240,7 +243,7 @@ public class HappyEndingController : MonoBehaviour
         dialogueIndex++;
         if (dialogueIndex >= dialogues.Length)
         {
-            StartCoroutine(PlayEndingImage());
+            StartCoroutine(FinishAfterImageDialogue());
             yield break;
         }
         ShowMidDialogue(dialogues[dialogueIndex]);
@@ -254,22 +257,61 @@ public class HappyEndingController : MonoBehaviour
 
     private void EnsureMidDialogueText()
     {
+        // Thank-you text uses an invisible CanvasGroup until the final card, so it
+        // cannot serve as the visible text alongside the mid-dialogue image.
+        if (midDialogueText == thankYouText)
+            midDialogueText = null;
+
         if (midDialogueText != null || whiteFadePanel == null || whiteFadePanel.transform.parent == null)
             return;
 
         GameObject textObject = new("MidDialogueText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        textObject.transform.SetParent(whiteFadePanel.transform.parent, false);
+        Transform parent = _activeMidDialogueImage != null
+            ? _activeMidDialogueImage.transform
+            : whiteFadePanel.transform.parent;
+        textObject.transform.SetParent(parent, false);
         TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
-        text.font = TMP_Settings.defaultFontAsset;
-        text.fontSize = 42f;
+        text.font = dialogueText != null && dialogueText.font != null ? dialogueText.font : TMP_Settings.defaultFontAsset;
+        text.fontSize = dialogueText != null ? dialogueText.fontSize : text.fontSize;
         text.alignment = TextAlignmentOptions.MidlineLeft;
-        text.color = Color.white;
-        text.enableWordWrapping = true;
+        text.color = dialogueText != null ? dialogueText.color : text.color;
+        text.fontStyle = dialogueText != null ? dialogueText.fontStyle : text.fontStyle;
+        text.lineSpacing = dialogueText != null ? dialogueText.lineSpacing : text.lineSpacing;
+        text.enableWordWrapping = false;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Overflow;
         RectTransform rect = text.rectTransform;
-        rect.anchorMin = new Vector2(.57f, .2f);
-        rect.anchorMax = new Vector2(.92f, .8f);
-        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+        rect.pivot = new Vector2(0f, .5f);
+        rect.sizeDelta = new Vector2(900f, 110f);
         midDialogueText = text;
+    }
+
+    private void PositionMidDialogueText()
+    {
+        if (midDialogueText == null || _activeMidDialogueImage == null ||
+            _activeMidDialogueImage.transform is not RectTransform imageRect)
+            return;
+
+        RectTransform textRect = midDialogueText.rectTransform;
+        if (textRect.parent != imageRect)
+            textRect.SetParent(imageRect, false);
+
+        // Place it in the empty space immediately to the right of Yuna's head,
+        // using the illustration's local coordinates rather than its full edge.
+        textRect.anchorMin = textRect.anchorMax = new Vector2(.5f, .5f);
+        textRect.pivot = new Vector2(0f, .5f);
+        textRect.anchoredPosition = new Vector2(600f, 250f);
+    }
+
+    private IEnumerator FinishAfterImageDialogue()
+    {
+        changingStage = true;
+        currentStage = Stage.EndingImage;
+        if (midDialogueText != null)
+            midDialogueText.gameObject.SetActive(false);
+        yield return FadeImage(whiteFadePanel, 0f, 1f, endingFadeDuration);
+        LoadMainMenu();
     }
 
     private void ShowDialogue(DialogueLine line)
