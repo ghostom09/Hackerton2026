@@ -727,7 +727,7 @@ MonoBehaviour:
   endingImageDuration: 3
   endingFadeDuration: 2
   endingImageFadeInDuration: 0.25
-  endingImageFadeOutDuration: 0.35
+  endingImageFadeOutDuration: 0.8
   endingImageRiseDuration: 1.1
   thankYouDuration: 1.8
 --- !u!1 &699937677

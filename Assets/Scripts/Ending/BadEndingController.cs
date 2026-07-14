@@ -15,7 +15,7 @@ public class BadEndingController : MonoBehaviour
     [Header("Timing")]
     [SerializeField] private float openingFadeDuration = 2f;
     [SerializeField] private float ringDelay = 2f;
-    [SerializeField] private float glitchDuration = 1f;
+    [SerializeField] private float glitchDuration = .5f;
     [SerializeField, Min(1f)] private float messageScrollSensitivity = 120f;
 
     [Header("Messages")]
@@ -144,6 +144,7 @@ public class BadEndingController : MonoBehaviour
     {
         phoneRect ??= phoneButton.GetComponent<RectTransform>();
         messageContentRect = messageScrollRect.content;
+        ConfigureMessageViewport();
         if (messageText.transform.parent != messageContentRect)
             messageText.transform.SetParent(messageContentRect, false);
         messageScrollRect.horizontal = false;
@@ -532,6 +533,19 @@ public class BadEndingController : MonoBehaviour
         textRect.pivot = new Vector2(0f, 1f);
         textRect.anchoredPosition = Vector2.zero;
         messageText.alignment = TextAlignmentOptions.TopLeft;
+    }
+
+    private void ConfigureMessageViewport()
+    {
+        if (messageScrollRect == null || messageScrollRect.viewport == null)
+            return;
+
+        RectTransform viewport = messageScrollRect.viewport;
+        viewport.anchorMin = Vector2.zero;
+        viewport.anchorMax = Vector2.one;
+        viewport.offsetMin = new Vector2(16f, 16f);
+        // Keep the sender title area free at the top of the chat panel.
+        viewport.offsetMax = new Vector2(-16f, -100f);
     }
 
     private void HideScrollBar()

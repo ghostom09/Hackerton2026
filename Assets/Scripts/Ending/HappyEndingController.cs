@@ -59,7 +59,7 @@ public class HappyEndingController : MonoBehaviour
     [SerializeField] private float endingImageDuration = .2f;
     [SerializeField] private float endingFadeDuration = 2f;
     [SerializeField] private float endingImageFadeInDuration = .25f;
-    [SerializeField] private float endingImageFadeOutDuration = .35f;
+    [SerializeField] private float endingImageFadeOutDuration = .8f;
     [SerializeField] private float endingImageRiseDuration = 1.1f;
     [SerializeField] private float thankYouDuration = .75f;
 
