@@ -29,6 +29,7 @@ public class HappyEndingController : MonoBehaviour
     {
         Starting,
         Dialogue,
+        ImageDialogue,
         EndingImage,
         Finished
     }
@@ -49,6 +50,15 @@ public class HappyEndingController : MonoBehaviour
     [SerializeField] private Image whiteFadePanel;
     [SerializeField] private TMP_Text thankYouText;
 
+    [Header("Mid-dialogue Image")]
+    [Tooltip("Optional image shown after the selected dialogue number. Falls back to Ending Image when empty.")]
+    [SerializeField] private GameObject midDialogueImage;
+    [Tooltip("Set to 0 to disable the mid-dialogue image.")]
+    [SerializeField, Min(0)] private int midDialogueImageAfterDialogue;
+    [SerializeField] private float midDialogueImageFadeDuration = .3f;
+    [Tooltip("Optional text placed to the right of the mid-dialogue image.")]
+    [SerializeField] private TMP_Text midDialogueText;
+
     [Header("Dialogue")]
     [SerializeField] private DialogueLine[] dialogues;
 
@@ -56,7 +66,7 @@ public class HappyEndingController : MonoBehaviour
     [SerializeField] private float openingFadeDuration = 2f;
     [SerializeField] private float dialogueDelay = 0.5f;
     [SerializeField] private float dialogueFadeDuration = 0.5f;
-    [SerializeField] private float endingImageDuration = .2f;
+    [SerializeField] private float endingImageDuration = .5f;
     [SerializeField] private float endingFadeDuration = 2f;
     [SerializeField] private float endingImageFadeInDuration = .25f;
     [SerializeField] private float endingImageFadeOutDuration = .8f;
@@ -71,6 +81,8 @@ public class HappyEndingController : MonoBehaviour
     private bool changingStage;
     private CanvasGroup _thankYouGroup;
     private Vector2 _endingImagePosition;
+    private bool _midDialogueImageShown;
+    private GameObject _activeMidDialogueImage;
     private void Awake()
     {
         Time.timeScale = 1f;
@@ -94,6 +106,9 @@ public class HappyEndingController : MonoBehaviour
             endingImage.SetActive(false);
         }
 
+        if (midDialogueImage != null && midDialogueImage != endingImage)
+            midDialogueImage.SetActive(false);
+
         CreateThankYouTextIfNeeded();
     }
 
@@ -104,7 +119,15 @@ public class HappyEndingController : MonoBehaviour
 
     private void Update()
     {
-        if (changingStage || currentStage != Stage.Dialogue)
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            StopAllCoroutines();
+            changingStage = true;
+            LoadMainMenu();
+            return;
+        }
+
+        if (changingStage || (currentStage != Stage.Dialogue && currentStage != Stage.ImageDialogue))
             return;
 
         bool pressSpace = Keyboard.current != null &&
@@ -151,6 +174,25 @@ public class HappyEndingController : MonoBehaviour
 
     private void NextDialogue()
     {
+        if (currentStage == Stage.ImageDialogue)
+        {
+            dialogueIndex++;
+            if (dialogueIndex >= dialogues.Length)
+            {
+                StartCoroutine(PlayEndingImage());
+                return;
+            }
+
+            ShowMidDialogue(dialogues[dialogueIndex]);
+            return;
+        }
+
+        if (ShouldShowMidDialogueImage())
+        {
+            StartCoroutine(PlayMidDialogueImage());
+            return;
+        }
+
         dialogueIndex++;
 
         if (dialogueIndex >= dialogues.Length)
@@ -160,6 +202,74 @@ public class HappyEndingController : MonoBehaviour
         }
 
         ShowDialogue(dialogues[dialogueIndex]);
+    }
+
+    private bool ShouldShowMidDialogueImage()
+    {
+        return !_midDialogueImageShown && midDialogueImageAfterDialogue > 0 &&
+               dialogueIndex + 1 >= midDialogueImageAfterDialogue;
+    }
+
+    private IEnumerator PlayMidDialogueImage()
+    {
+        changingStage = true;
+        _midDialogueImageShown = true;
+
+        _activeMidDialogueImage = midDialogueImage != null ? midDialogueImage : endingImage;
+        if (_activeMidDialogueImage == null)
+        {
+            changingStage = false;
+            yield break;
+        }
+
+        SetImageVisible(dialoguePanel, false, 0f);
+        SetDialogueBackgroundVisible(false);
+        SetCharactersActive(false);
+
+        yield return FadeImage(whiteFadePanel, 0f, 1f, midDialogueImageFadeDuration);
+        _activeMidDialogueImage.SetActive(true);
+        EnsureMidDialogueText();
+        if (midDialogueText != null)
+            midDialogueText.gameObject.SetActive(true);
+        yield return FadeImage(whiteFadePanel, 1f, 0f, midDialogueImageFadeDuration);
+        whiteFadePanel.gameObject.SetActive(false);
+
+        changingStage = false;
+        currentStage = Stage.ImageDialogue;
+
+        dialogueIndex++;
+        if (dialogueIndex >= dialogues.Length)
+        {
+            StartCoroutine(PlayEndingImage());
+            yield break;
+        }
+        ShowMidDialogue(dialogues[dialogueIndex]);
+    }
+
+    private void ShowMidDialogue(DialogueLine line)
+    {
+        if (midDialogueText != null && line != null)
+            midDialogueText.text = line.dialogue;
+    }
+
+    private void EnsureMidDialogueText()
+    {
+        if (midDialogueText != null || whiteFadePanel == null || whiteFadePanel.transform.parent == null)
+            return;
+
+        GameObject textObject = new("MidDialogueText", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(whiteFadePanel.transform.parent, false);
+        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
+        text.font = TMP_Settings.defaultFontAsset;
+        text.fontSize = 42f;
+        text.alignment = TextAlignmentOptions.MidlineLeft;
+        text.color = Color.white;
+        text.enableWordWrapping = true;
+        RectTransform rect = text.rectTransform;
+        rect.anchorMin = new Vector2(.57f, .2f);
+        rect.anchorMax = new Vector2(.92f, .8f);
+        rect.offsetMin = rect.offsetMax = Vector2.zero;
+        midDialogueText = text;
     }
 
     private void ShowDialogue(DialogueLine line)
@@ -200,6 +310,10 @@ public class HappyEndingController : MonoBehaviour
         SetImageVisible(dialoguePanel, false, 0f);
         SetDialogueBackgroundVisible(false);
         SetCharactersActive(false);
+        if (midDialogueText != null)
+            midDialogueText.gameObject.SetActive(false);
+        if (_activeMidDialogueImage != null && _activeMidDialogueImage != endingImage)
+            _activeMidDialogueImage.SetActive(false);
 
         // Fade to white first, then place the ending image behind the white overlay.
         yield return FadeImage(whiteFadePanel, 0f, 1f, endingImageFadeInDuration);

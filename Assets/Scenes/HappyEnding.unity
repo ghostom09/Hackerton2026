@@ -720,11 +720,53 @@ MonoBehaviour:
   endingImage: {fileID: 170776986}
   whiteFadePanel: {fileID: 1459316978}
   thankYouText: {fileID: 1038979958}
-  dialogues: []
+  midDialogueImage: {fileID: 0}
+  midDialogueImageAfterDialogue: 12
+  midDialogueImageFadeDuration: 0.3
+  midDialogueText: {fileID: 0}
+  dialogues:
+  - speakerName: "\uC720\uB098"
+    dialogue: "...\uC654\uAD6C\uB098"
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uC815\uB9D0 \uC5EC\uAE30\uAE4C\uC9C0 \uC640\uC92C\uB124."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uACC4\uC18D \uAE30\uB2E4\uB838\uC5B4."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uD639\uC2DC \uC624\uC9C0 \uC54A\uC73C\uBA74 \uC5B4\uB5A1\uD558\uC9C0."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uC624\uB294 \uAE38\uC5D0 \uD3EC\uAE30\uD558\uBA74 \uC5B4\uB5A1\uD558\uC9C0."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uADF8\uB7F0 \uC0DD\uAC01\uB9CC \uACC4\uC18D \uD588\uC5B4."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uADF8\uB798\uC11C \uB108\uB97C \uC7AC\uCD09\uD558\uACE0,"
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uC870\uAE08 \uC2EC\uD55C \uB9D0\uB3C4 \uD588\uB358 \uAC83 \uAC19\uC544."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uBBF8\uC548\uD574."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uADF8\uB798\uB3C4 \uB124\uAC00 \uC774\uB807\uAC8C \uBB34\uC0AC\uD788
+      \uC640\uC918\uC11C \uB2E4\uD589\uC774\uC57C."
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\u2026\u2026\uC870\uAE08\uB9CC \uAC00\uAE4C\uC774 \uC640\uC904\uB798?"
+    speakerSide: 1
+  - speakerName: "\uC720\uB098"
+    dialogue: "\uB124\uAC00 \uC815\uB9D0 \uC5EC\uAE30 \uC788\uB2E4\uB294 \uAC78 \uD655\uC778\uD558\uACE0
+      \uC2F6\uC5B4."
+    speakerSide: 1
   openingFadeDuration: 2
   dialogueDelay: 0.5
   dialogueFadeDuration: 0.5
-  endingImageDuration: 3
+  endingImageDuration: 0.5
   endingFadeDuration: 2
   endingImageFadeInDuration: 0.25
   endingImageFadeOutDuration: 0.8
@@ -764,8 +806,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -301, y: 482.97}
-  m_SizeDelta: {x: 480.1, y: 711.17}
+  m_AnchoredPosition: {x: -308, y: 465}
+  m_SizeDelta: {x: 439.25, y: 650.66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &699937679
 CanvasRenderer:
@@ -1265,8 +1307,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 229, y: 482.97}
-  m_SizeDelta: {x: 543.56, y: 808.26}
+  m_AnchoredPosition: {x: 259, y: 482.97}
+  m_SizeDelta: {x: 617.88, y: 838.67}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1969654979
 CanvasRenderer:
