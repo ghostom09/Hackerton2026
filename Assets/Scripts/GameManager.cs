@@ -246,10 +246,12 @@ public class GameManager : MonoBehaviour
 
     private static void LoadEndingScene(string sceneName)
     {
-        if (Application.CanStreamedLevelBeLoaded(sceneName))
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
-        else
-            Debug.LogError($"{sceneName} is not included in the build settings.");
+        // Ending scenes are already registered in the build settings. Loading them
+        // directly avoids a false negative from the streamed-level pre-check during
+        // an in-editor run, which otherwise leaves the game stopped on the map.
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            sceneName,
+            UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
     private void HandleTimerReduced(float amount)

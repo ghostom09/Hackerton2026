@@ -154,8 +154,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -568, y: -253}
-  m_SizeDelta: {x: 1826.87, y: 1799.57}
+  m_AnchoredPosition: {x: -647, y: -282}
+  m_SizeDelta: {x: 1665.7, y: 1870.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &170776988
 MonoBehaviour:
@@ -713,6 +713,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HappyEndingController
   leftCharacter: {fileID: 1969654980}
   rightCharacter: {fileID: 699937680}
+  normalExpression: {fileID: -2120910609323163240, guid: ae0b9b03d2c2c924689c6c369affeae1, type: 3}
+  smileExpression: {fileID: -5856553710798604053, guid: 0a4d55e0b0ac2f648bb5455174a6c081, type: 3}
+  sadExpression: {fileID: 7029822087498416797, guid: 94aed982d5d714745b5a4804f1b8a6f5, type: 3}
+  obsessiveExpression: {fileID: 521855615241292991, guid: e98612b28d160e240aed3af302c30f0e, type: 3}
   dialoguePanel: {fileID: 979240503}
   nameText: {fileID: 324543349}
   dialogueText: {fileID: 1108696804}
@@ -721,75 +725,96 @@ MonoBehaviour:
   whiteFadePanel: {fileID: 1459316978}
   thankYouText: {fileID: 1038979958}
   midDialogueImage: {fileID: 0}
-  midDialogueImageAfterDialogue: 12
+  midDialogueImageAfterDialogue: 22
   midDialogueImageFadeDuration: 0.3
   midDialogueText: {fileID: 1038979958}
   dialogues:
   - speakerName: "\uC720\uB098"
     dialogue: "...\uC654\uAD6C\uB098"
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uC815\uB9D0 \uC5EC\uAE30\uAE4C\uC9C0 \uC640\uC92C\uB124."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uACC4\uC18D \uAE30\uB2E4\uB838\uC5B4."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uD639\uC2DC \uC624\uC9C0 \uC54A\uC73C\uBA74 \uC5B4\uB5A1\uD558\uC9C0."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uC624\uB294 \uAE38\uC5D0 \uD3EC\uAE30\uD558\uBA74 \uC5B4\uB5A1\uD558\uC9C0."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uADF8\uB7F0 \uC0DD\uAC01\uB9CC \uACC4\uC18D \uD588\uC5B4."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uADF8\uB798\uC11C \uB108\uB97C \uC7AC\uCD09\uD558\uACE0,"
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uC870\uAE08 \uC2EC\uD55C \uB9D0\uB3C4 \uD588\uB358 \uAC83 \uAC19\uC544."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uBBF8\uC548\uD574."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uADF8\uB798\uB3C4 \uB124\uAC00 \uC774\uB807\uAC8C \uBB34\uC0AC\uD788
       \uC640\uC918\uC11C \uB2E4\uD589\uC774\uC57C."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\u2026\u2026\uC870\uAE08\uB9CC \uAC00\uAE4C\uC774 \uC640\uC904\uB798?"
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uB124\uAC00 \uC815\uB9D0 \uC5EC\uAE30 \uC788\uB2E4\uB294 \uAC78 \uD655\uC778\uD558\uACE0
       \uC2F6\uC5B4."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uB530\uB73B\uD558\uB124."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uC774\uC81C\uC57C \uC2E4\uAC10\uC774 \uB098."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uB124\uAC00 \uB098\uB97C \uAD6C\uD558\uB7EC \uC654\uB2E4\uB294 \uAC8C."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uACE0\uB9C8\uC6CC."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uB098\uB97C \uC78A\uC9C0 \uC54A\uC544\uC918\uC11C."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uADF8\uB9AC\uACE0 \uB05D\uAE4C\uC9C0 \uBB34\uC0AC\uD788 \uC640\uC918\uC11C."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uC774\uC81C \uAC19\uC774 \uB098\uAC00\uC790."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\uC774\uBC88\uC5D0\uB294 \uB098\uB3C4 \uB124 \uC606\uC5D0\uC11C \uAC78\uC744\uAC8C."
     speakerSide: 1
+    portraitExpression: 0
   - speakerName: "\uC720\uB098"
     dialogue: "\u2026\u2026\uC870\uAE08\uB9CC \uB354 \uC774\uB7EC\uACE0 \uC788\uB2E4\uAC00."
     speakerSide: 1
+    portraitExpression: 0
   openingFadeDuration: 2
   dialogueDelay: 0.5
   dialogueFadeDuration: 0.5

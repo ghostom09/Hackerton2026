@@ -14,6 +14,14 @@ public class HappyEndingController : MonoBehaviour
         None
     }
 
+    public enum PortraitExpression
+    {
+        Normal,
+        Smile,
+        Sad,
+        Obsessive
+    }
+
     [Serializable]
     public class DialogueLine
     {
@@ -23,6 +31,7 @@ public class HappyEndingController : MonoBehaviour
         public string dialogue;
 
         public SpeakerSide speakerSide;
+        public PortraitExpression portraitExpression;
     }
 
     private enum Stage
@@ -37,6 +46,10 @@ public class HappyEndingController : MonoBehaviour
     [Header("Characters")]
     [SerializeField] private Image leftCharacter;
     [SerializeField] private Image rightCharacter;
+    [SerializeField] private Sprite normalExpression;
+    [SerializeField] private Sprite smileExpression;
+    [SerializeField] private Sprite sadExpression;
+    [SerializeField] private Sprite obsessiveExpression;
 
     [Header("Dialogue UI")]
     [SerializeField] private Image dialoguePanel;
@@ -277,13 +290,13 @@ public class HappyEndingController : MonoBehaviour
         text.color = dialogueText != null ? dialogueText.color : text.color;
         text.fontStyle = dialogueText != null ? dialogueText.fontStyle : text.fontStyle;
         text.lineSpacing = dialogueText != null ? dialogueText.lineSpacing : text.lineSpacing;
-        text.enableWordWrapping = false;
-        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.enableWordWrapping = true;
+        text.textWrappingMode = TextWrappingModes.Normal;
         text.overflowMode = TextOverflowModes.Overflow;
         RectTransform rect = text.rectTransform;
         rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
         rect.pivot = new Vector2(0f, .5f);
-        rect.sizeDelta = new Vector2(900f, 110f);
+        rect.sizeDelta = new Vector2(720f, 520f);
         midDialogueText = text;
     }
 
@@ -339,6 +352,25 @@ public class HappyEndingController : MonoBehaviour
                 SetCharacterColors(inactiveColor, inactiveColor);
                 break;
         }
+
+        SetRightCharacterExpression(line.portraitExpression);
+    }
+
+    private void SetRightCharacterExpression(PortraitExpression expression)
+    {
+        if (rightCharacter == null)
+            return;
+
+        Sprite nextSprite = expression switch
+        {
+            PortraitExpression.Smile => smileExpression,
+            PortraitExpression.Sad => sadExpression,
+            PortraitExpression.Obsessive => obsessiveExpression,
+            _ => normalExpression
+        };
+
+        if (nextSprite != null)
+            rightCharacter.sprite = nextSprite;
     }
 
     private IEnumerator PlayEndingImage()
@@ -537,6 +569,8 @@ public class HappyEndingController : MonoBehaviour
 
     private void EnsureDefaultDialogues()
     {
+        dialogues = BuildHappyEndingDialogues();
+
         if (dialogues != null && dialogues.Length > 0)
             return;
 
@@ -570,13 +604,50 @@ public class HappyEndingController : MonoBehaviour
         };
     }
 
-    private static DialogueLine Yuna(string dialogue)
+    private static DialogueLine[] BuildHappyEndingDialogues()
+    {
+        string[] lines =
+        {
+            "아, 드디어 내게 와주었구나. 내 사랑.",
+            "날 바라봐주고, 믿어주고, 위해주고…… 종국에는 날 죽여줄 네가 왔구나.",
+            "사랑해.", "너도 그렇지?", "여기까지 왔다면 이제 더 이상 돌아갈 곳도 없는 거잖아.",
+            "그래. 너도 날 위해 이런 곳까지 와준 거구나.", "걱정하지 마.", "이곳에는 너와 나뿐이야.",
+            "다른 사람 따위는 없어.", "넌 나만 바라보면 돼. 나도 너만 바라볼 테니까.",
+            "네가 원한다면 무엇이든 해줄게.", "여기서 나가는 것만 빼고, 전부.",
+            "그 표정을 보니 너도 원했던 거구나.", "역시 내 사랑이야.", "그러니까 앞으로도 날 위해 헌신해줘.",
+            "날 위해 살아주고, 마지막에는 날 위해 죽어줘.", "너와 나는 떨어질 수 없는 관계잖아.",
+            "내가 죽고, 너도 죽고.", "하데스와 페르세포네처럼 우리는 영원히 이곳에서 함께하는 거야.",
+            "넌 모든 퍼즐을 풀었고, 나는 여기 있어.", "이제 우리 사이를 가로막는 건 아무것도 없어.",
+            "그러니까 이리 와.", "날 안아줘.", "내가 널 사랑하고, 네가 날 사랑한다면…… 내게 와서 날 안아줘.",
+            "그래, 조금만 더 세게.", "내가 너를 제외한 모든 것을 잊을 수 있도록.",
+            "내가 들었던 말도, 했던 행동도, 품었던 생각도 전부 잊고 너만 생각할 수 있게 해줘.", "더 세게 안아줘.",
+            "내가 네 품 안에서 터져 죽을 수 있을 만큼.", "그러면 넌 내가 죽은 뒤에도 죄책감 속에서 영원히 나를 기억하겠지.",
+            "아아, 너도 내가 죽고 얼마 지나지 않아 따라오겠구나.", "하지만 그때까지는 내 생각밖에 하지 못할 거야.",
+            "너의 사랑은 중독적이고, 또 위험하니까.", "내가 널 가지고, 너도 날 가지고.",
+            "서로 뒤섞여 어디까지가 나이고, 어디부터가 너인지 잊어버릴 수 있도록 더 세게 안아줘.",
+            "네가 날 사랑한다면 그 정도는 해줄 수 있지?", "그래.",
+            "넌 마음이 약해서 정말로 날 죽일 만큼 세게 안아주지는 못하겠지.",
+            "하지만 마음이 약하기 때문에, 내가 했던 이 말들을 평생 잊지도 못할 거야.", "그러니까 날 안아줘.",
+            "네 품에서 죽게 해줘.", "그리고 영원히……", "네 안에서 살아가게 해줘.",
+            "그래.", "그게 너의 선택이구나.", "……나도 사랑해."
+        };
+
+        DialogueLine[] result = new DialogueLine[lines.Length];
+        for (int i = 0; i < lines.Length; i++)
+        {
+            result[i] = Yuna(lines[i], PortraitExpression.Normal);
+        }
+        return result;
+    }
+
+    private static DialogueLine Yuna(string dialogue, PortraitExpression expression = PortraitExpression.Normal)
     {
         return new DialogueLine
         {
             speakerName = "유나",
             dialogue = dialogue,
-            speakerSide = SpeakerSide.Right
+            speakerSide = SpeakerSide.Right,
+            portraitExpression = expression
         };
     }
 

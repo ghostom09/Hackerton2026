@@ -434,7 +434,21 @@ public class BadEndingController : MonoBehaviour
 
             if (messageIndex == ChatMessageCountBeforeImage)
                 imageTransitionReady = true;
+
+            // This scene currently ends with fewer chat messages than the image
+            // sequence threshold. Fade automatically once its final line has been
+            // shown instead of waiting forever for a nonexistent 20th message.
+            if (messageIndex >= messages.Length && messages.Length < ChatMessageCountBeforeImage)
+                StartCoroutine(FadeOutAfterLastChatMessage());
         }
+    }
+
+    private IEnumerator FadeOutAfterLastChatMessage()
+    {
+        glitchPlaying = true;
+        yield return new WaitForSecondsRealtime(imageSequenceLineDuration);
+        yield return FadeImage(fadePanel, 0f, 1f, endingFadeDuration);
+        LoadMainMenu();
     }
 
     private IEnumerator SwitchToImageSequence()
