@@ -168,7 +168,6 @@ public class MagazineGrabChecker : MonoBehaviour
         if (magazine == null)
             return;
 
-        Vector3 firstMagazinePosition = magazine.transform.position;
         magazines.Add(magazine);
         for (int i = 1; i < magazineCount; i++)
         {
@@ -178,32 +177,117 @@ public class MagazineGrabChecker : MonoBehaviour
             magazines.Add(extraMagazine);
         }
 
-        RandomizeMagazinePositions(firstMagazinePosition);
+        RandomizeMagazinePositions();
     }
 
-    private void RandomizeMagazinePositions(Vector3 firstMagazinePosition)
+    private void RandomizeMagazinePositions()
     {
         if (magazines.Count == 0)
             return;
 
-        // Keep the random positions inside the span previously occupied by
-        // the evenly spaced magazine copies.
-        Vector3 lastMagazinePosition = firstMagazinePosition +
-            (Vector3)(additionalMagazineOffset * (magazines.Count - 1));
-        float minX = Mathf.Min(firstMagazinePosition.x, lastMagazinePosition.x);
-        float maxX = Mathf.Max(firstMagazinePosition.x, lastMagazinePosition.x);
-        float minY = Mathf.Min(firstMagazinePosition.y, lastMagazinePosition.y);
-        float maxY = Mathf.Max(firstMagazinePosition.y, lastMagazinePosition.y);
+        Physics2D.SyncTransforms();
 
-        foreach (MagazineItem magazineItem in magazines)
+        if (!TryGetSpawnBounds(out float minX, out float maxX, out float minY, out float maxY))
+            return;
+
+        GetMagazineSize(out float magazineWidth, out float magazineHeight);
+        const float spacing = 0.02f;
+        float horizontalSpacing = magazineWidth + spacing;
+        float verticalSpacing = magazineHeight + spacing;
+
+        // Keep the complete magazine inside the screen. The spawn area is the
+        // left third of the screen, while its height uses the full screen.
+        minX += magazineWidth * 0.5f;
+        maxX -= magazineWidth * 0.5f;
+        minY += magazineHeight * 0.5f;
+        maxY -= magazineHeight * 0.5f;
+
+        int columns = Mathf.FloorToInt((maxX - minX) / horizontalSpacing) + 1;
+        int rows = Mathf.FloorToInt((maxY - minY) / verticalSpacing) + 1;
+
+        if (columns <= 0 || rows <= 0 || columns * rows < magazines.Count)
         {
+            Debug.LogWarning("Magazine spawn area is too small to place every magazine without overlap.", this);
+            return;
+        }
+
+        // Place magazines on a randomly shifted, shuffled grid. The grid
+        // spacing is based on collider size, so no two magazines can overlap.
+        float horizontalOffset = Random.Range(0f, (maxX - minX) - horizontalSpacing * (columns - 1));
+        float verticalOffset = Random.Range(0f, (maxY - minY) - verticalSpacing * (rows - 1));
+        List<Vector2> slots = new(columns * rows);
+        for (int row = 0; row < rows; row++)
+        {
+            for (int column = 0; column < columns; column++)
+            {
+                slots.Add(new Vector2(
+                    minX + horizontalOffset + horizontalSpacing * column,
+                    minY + verticalOffset + verticalSpacing * row));
+            }
+        }
+
+        ShuffleSlots(slots);
+        for (int i = 0; i < magazines.Count; i++)
+        {
+            MagazineItem magazineItem = magazines[i];
             if (magazineItem == null)
                 continue;
 
             magazineItem.transform.position = new Vector3(
-                Random.Range(minX, maxX),
-                Random.Range(minY, maxY),
+                slots[i].x,
+                slots[i].y,
                 magazineItem.transform.position.z);
+        }
+    }
+
+    private bool TryGetSpawnBounds(out float minX, out float maxX, out float minY, out float maxY)
+    {
+        FindCamera();
+        if (targetCamera == null)
+        {
+            minX = maxX = minY = maxY = 0f;
+            Debug.LogWarning("Magazine spawn area could not find a camera.", this);
+            return false;
+        }
+
+        MagazineItem referenceMagazine = GetReferenceMagazine();
+        float depth = referenceMagazine == null
+            ? 0f
+            : Mathf.Abs(referenceMagazine.transform.position.z - targetCamera.transform.position.z);
+        Vector3 bottomLeft = targetCamera.ViewportToWorldPoint(new Vector3(0f, 0f, depth));
+        Vector3 topLeft = targetCamera.ViewportToWorldPoint(new Vector3(0f, 1f, depth));
+        Vector3 leftThird = targetCamera.ViewportToWorldPoint(new Vector3(1f / 3f, 0f, depth));
+
+        minX = bottomLeft.x;
+        maxX = leftThird.x;
+        minY = bottomLeft.y;
+        maxY = topLeft.y;
+        return true;
+    }
+
+    private void GetMagazineSize(out float width, out float height)
+    {
+        width = 0f;
+        height = 0f;
+        foreach (MagazineItem magazineItem in magazines)
+        {
+            if (magazineItem != null && magazineItem.ItemCollider != null)
+            {
+                width = Mathf.Max(width, magazineItem.ItemCollider.bounds.size.x);
+                height = Mathf.Max(height, magazineItem.ItemCollider.bounds.size.y);
+            }
+        }
+
+        width = Mathf.Max(0.01f, width);
+        height = Mathf.Max(0.01f, height);
+    }
+
+    private static void ShuffleSlots(List<Vector2> slots)
+    {
+        for (int i = slots.Count - 1; i > 0; i--)
+        {
+            int swapIndex = Random.Range(0, i + 1);
+            (slots[i], slots[swapIndex]) = (slots[swapIndex], slots[i]);
         }
     }
 
