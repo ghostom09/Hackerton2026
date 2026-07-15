@@ -128,6 +128,8 @@ public class WireCutStage : MonoBehaviour
             }
             else
             {
+                // A wrong wire costs one third of the time still available.
+                GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(1f / 3f);
                 SelectNextSafeWire(i);
             }
             return;

@@ -4,6 +4,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class FallingRoomController : MonoBehaviour
 {
+    private const float RockHitTimePenaltyFraction = 1f / 3f;
+
     [Header("Room")]
     [SerializeField] private Transform player;
     [SerializeField] private Transform exitPoint;
@@ -104,6 +106,8 @@ public class FallingRoomController : MonoBehaviour
             return;
         }
 
+        GameManager.Instance?.ReduceCurrentMapTimeByRemainingFraction(
+            RockHitTimePenaltyFraction);
         StopHazards();
     }
 

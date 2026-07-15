@@ -23,6 +23,7 @@ public class ObstacleRoomController : MonoBehaviour
 
     private Vector3 originalScrollPosition;
     private ObstacleHazard[] obstacles;
+    private readonly List<ScrollContentState> initialScrollContent = new();
     private bool isRunning;
     private bool isFinished;
 
@@ -38,10 +39,20 @@ public class ObstacleRoomController : MonoBehaviour
         }
     }
 
+    private struct ScrollContentState
+    {
+        public Transform Transform;
+        public Vector3 LocalPosition;
+        public Quaternion LocalRotation;
+        public Vector3 LocalScale;
+        public bool WasActive;
+    }
+
     private void Awake()
     {
         originalScrollPosition = scrollRoot.localPosition;
         obstacles = scrollRoot.GetComponentsInChildren<ObstacleHazard>(true);
+        CacheInitialScrollContent();
     }
 
     private void Start()
@@ -74,8 +85,7 @@ public class ObstacleRoomController : MonoBehaviour
         isRunning = true;
         isFinished = false;
 
-        scrollRoot.gameObject.SetActive(true);
-        scrollRoot.localPosition = originalScrollPosition;
+        ResetScrollContent();
 
         Vector3 spawnPosition = playerSpawnPoint != null
             ? playerSpawnPoint.position
@@ -83,8 +93,46 @@ public class ObstacleRoomController : MonoBehaviour
 
         player.ResetPlayer(spawnPosition);
         RandomizeObstacleLayout();
+        Physics2D.SyncTransforms();
 
         Debug.Log("장애물 피하기 시작!");
+    }
+
+    private void CacheInitialScrollContent()
+    {
+        initialScrollContent.Clear();
+
+        foreach (Transform content in scrollRoot.GetComponentsInChildren<Transform>(true))
+        {
+            if (content == scrollRoot)
+                continue;
+
+            initialScrollContent.Add(new ScrollContentState
+            {
+                Transform = content,
+                LocalPosition = content.localPosition,
+                LocalRotation = content.localRotation,
+                LocalScale = content.localScale,
+                WasActive = content.gameObject.activeSelf,
+            });
+        }
+    }
+
+    private void ResetScrollContent()
+    {
+        scrollRoot.gameObject.SetActive(true);
+        scrollRoot.localPosition = originalScrollPosition;
+
+        foreach (ScrollContentState content in initialScrollContent)
+        {
+            if (content.Transform == null)
+                continue;
+
+            content.Transform.localPosition = content.LocalPosition;
+            content.Transform.localRotation = content.LocalRotation;
+            content.Transform.localScale = content.LocalScale;
+            content.Transform.gameObject.SetActive(content.WasActive);
+        }
     }
 
     private void RandomizeObstacleLayout()
@@ -102,13 +150,11 @@ public class ObstacleRoomController : MonoBehaviour
                 return;
         }
 
-        // This should only be reached with unusual inspector values. The evenly
-        // spaced fallback still runs the same reachability test before accepting.
-        if (!TryGenerateLayout(false))
-        {
-            Debug.LogError("Unable to generate a traversable obstacle layout. Check the player range, speed, and obstacle spacing.");
-            SetObstaclesActive(false);
-        }
+        // Keep the latest random layout visible even when the reachability
+        // validation cannot find a perfect route for the current settings.
+        // Hiding every obstacle made a reset look like the stage had vanished.
+        Debug.LogWarning("Unable to validate a traversable obstacle layout. Keeping the latest random obstacle positions.");
+        SetObstaclesActive(true);
     }
 
     private void SetObstaclesActive(bool isActive)
@@ -301,6 +347,10 @@ public class ObstacleRoomController : MonoBehaviour
         Debug.Log("장애물 방 클리어!");
 
         OnRoomCleared?.Invoke();
+
+        // Keep this room on the same completion path as the other minigames.
+        // GameManager handles the clear reaction and loads the next random stage.
+        MiniGameClear.RequestNext();
 
         // 임시 확인용
         gameObject.SetActive(false);

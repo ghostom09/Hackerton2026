@@ -168,6 +168,7 @@ public class MagazineGrabChecker : MonoBehaviour
         if (magazine == null)
             return;
 
+        Vector3 firstMagazinePosition = magazine.transform.position;
         magazines.Add(magazine);
         for (int i = 1; i < magazineCount; i++)
         {
@@ -175,6 +176,34 @@ public class MagazineGrabChecker : MonoBehaviour
             extraMagazine.name = $"{magazine.name} {i + 1}";
             extraMagazine.transform.position = magazine.transform.position + (Vector3)(additionalMagazineOffset * i);
             magazines.Add(extraMagazine);
+        }
+
+        RandomizeMagazinePositions(firstMagazinePosition);
+    }
+
+    private void RandomizeMagazinePositions(Vector3 firstMagazinePosition)
+    {
+        if (magazines.Count == 0)
+            return;
+
+        // Keep the random positions inside the span previously occupied by
+        // the evenly spaced magazine copies.
+        Vector3 lastMagazinePosition = firstMagazinePosition +
+            (Vector3)(additionalMagazineOffset * (magazines.Count - 1));
+        float minX = Mathf.Min(firstMagazinePosition.x, lastMagazinePosition.x);
+        float maxX = Mathf.Max(firstMagazinePosition.x, lastMagazinePosition.x);
+        float minY = Mathf.Min(firstMagazinePosition.y, lastMagazinePosition.y);
+        float maxY = Mathf.Max(firstMagazinePosition.y, lastMagazinePosition.y);
+
+        foreach (MagazineItem magazineItem in magazines)
+        {
+            if (magazineItem == null)
+                continue;
+
+            magazineItem.transform.position = new Vector3(
+                Random.Range(minX, maxX),
+                Random.Range(minY, maxY),
+                magazineItem.transform.position.z);
         }
     }
 

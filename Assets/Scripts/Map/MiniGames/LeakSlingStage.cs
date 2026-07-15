@@ -259,7 +259,13 @@ public class LeakSlingStage : MonoBehaviour
             return;
 
         var vel = direction.normalized * (launchSpeed * Mathf.Clamp01(direction.magnitude / maxPull));
-        var go = SpawnVisual(patchPrefab, slingAnchor.position, "Patch", new Color(0.95f, 0.75f, 0.25f), 0.45f);
+        var go = SpawnVisual(
+            patchPrefab,
+            slingAnchor.position,
+            "Patch",
+            new Color(0.95f, 0.75f, 0.25f),
+            0.45f,
+            preservePrefabScale: true);
         _shots.Add(new PatchShot
         {
             Transform = go.transform,
@@ -378,13 +384,20 @@ public class LeakSlingStage : MonoBehaviour
         _leaks.Add(new LeakBlob { Transform = go.transform, Life = leakLifetime });
     }
 
-    private GameObject SpawnVisual(GameObject prefab, Vector3 pos, string name, Color fallbackColor, float scale)
+    private GameObject SpawnVisual(
+        GameObject prefab,
+        Vector3 pos,
+        string name,
+        Color fallbackColor,
+        float scale,
+        bool preservePrefabScale = false)
     {
         GameObject go;
         if (prefab != null)
         {
             go = Instantiate(prefab, pos, Quaternion.identity, spawnParent);
-            go.transform.localScale = Vector3.one * scale;
+            if (!preservePrefabScale)
+                go.transform.localScale = Vector3.one * scale;
         }
         else
         {

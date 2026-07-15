@@ -109,7 +109,9 @@ public class RoadCrossStage : MonoBehaviour
 
         var spriteRenderer = go.GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
-            spriteRenderer.flipX = !fromLeft;
+            // The source car sprite faces left. Mirror only cars entering from
+            // the left so each lane's cars face in their movement direction.
+            spriteRenderer.flipX = fromLeft;
 
         go.SetActive(true);
         _cars.Add(go.transform);

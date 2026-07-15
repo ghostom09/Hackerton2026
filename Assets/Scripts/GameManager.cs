@@ -76,6 +76,49 @@ public class GameManager : MonoBehaviour
         UpdateTimerEmotionByRemaining(true);
     }
 
+    /// <summary>
+    /// Deducts a fixed number of seconds from the active stage timer.
+    /// </summary>
+    public void ReduceCurrentMapTime(float seconds)
+    {
+        if (isGameStopped || _isSwitchingMap || seconds <= 0f)
+            return;
+
+        if (timer != null)
+        {
+            timer.ReduceTime(seconds);
+            currentMapTime = timer.RemainingTime;
+        }
+        else
+        {
+            currentMapTime = Mathf.Max(0f, currentMapTime - seconds);
+        }
+
+        if (currentMapTime <= 0f)
+        {
+            TriggerBadEnding();
+            return;
+        }
+
+        UpdateTimerEmotionByRemaining(false);
+    }
+
+    /// <summary>
+    /// Deducts a fraction of the time that remains on the active stage timer.
+    /// </summary>
+    public void ReduceCurrentMapTimeByRemainingFraction(float fraction)
+    {
+        if (isGameStopped || _isSwitchingMap)
+            return;
+
+        var clampedFraction = Mathf.Clamp01(fraction);
+        if (clampedFraction <= 0f)
+            return;
+
+        var remainingTime = timer != null ? timer.RemainingTime : currentMapTime;
+        ReduceCurrentMapTime(remainingTime * clampedFraction);
+    }
+
     public void UpdateMapTimer()
     {
         if (isGameStopped || _isSwitchingMap || currentMapMaxTime <= 0f) return;
